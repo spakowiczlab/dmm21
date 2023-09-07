@@ -1,0 +1,160 @@
+---
+title: "02-clustering"
+author: "Yangyang Liu"
+date: "6/14/2021"
+output: html_document
+---
+
+#Revised Jul/6/2022 by YYL
+
+```{r Load data}
+#source("00-paths.R")
+metamerge.match.c <- read.csv("01-processed-file.csv")
+seqtab.c <- read.csv("01-processed-seqtab.csv") 
+#Note: Unless you are using OSC, if you are on a personal computer, please re-run 01-processing.Rmd to acquire seqtab (== seqtab.c in the following codes) and metamerge.match (== metamerge.match.c in the following codes) to process your analysis to prevent long file loading time! - YL, 20220706
+```
+
+#PCA analysis
+
+```{r PCA of cleaned up data file}
+#change!
+seqtab.d <- seqtab.c
+rownames(seqtab.d) <- seqtab.d$X
+seqtab.d$X <- NULL
+
+
+#PCA
+seqtabc.pca <- prcomp(seqtab.d)
+summary(seqtabc.pca)
+```
+
+#Visualization - clustering plot
+
+```{r Set Figures Height and Width}
+knitr::opts_chunk$set(fig.width=4, fig.height=3) 
+```
+
+```{r Clustering plot}
+library(ggfortify)
+library(tidyverse)
+
+#graph op1 with dots
+PCA_label_plot <-
+autoplot(seqtabc.pca, data = metamerge.match.c, colour = "GroupID", label = FALSE,label.size = 3, shape = T, frame = T, frame.type = "norm") +
+  theme_bw()+
+  ggtitle("Effect of BRB Nectar on Microbiome Composition", subtitle = " PCA Clustring Analysis by Experimental Groups") +
+  theme(axis.text = element_text(size = 10)) 
+#ggsave(plot=PCA_label_plot, dev = "pdf", filename= "../figures/PCA_plot_Revised.pdf", height= , width= )
+print(PCA_label_plot)
+```
+
+```{r}
+
+```
+
+```{r Clustering plot}
+#BACKUP graph alt2 with only dots
+colnames(metamerge.match.c)[4] <- "Experimental.treatment.groups"
+clusterplot <-
+autoplot(seqtabc.pca, data = metamerge.match.c, colour = "Experimental.treatment.groups", frame = T, frame.type = "norm") +
+  theme_bw()+ 
+  ggtitle("Effect of BRB Nectar on Microbiome Composition", subtitle = " PCA Clustring Analysis by Experimental Groups")
+#save_plot(clusterplot, "../figures/Group.Clustering.Graph.png")
+print(clusterplot)
+```
+
+```{r}
+colnames(metamerge.match.c)[4] <- "Experimental.treatment.groups"
+clusterplot <- autoplot(seqtabc.pca, data = metamerge.match.c, colour = "Experimental.treatment.groups", frame = TRUE, frame.type = "norm") +
+  theme_bw()
+#save_plot(clusterplot, "../figures/Group.Clustering.Graph.png")
+print(clusterplot)
+
+```
+
+```{r}
+colnames(metamerge.match.c)[4] <- "Experimental.treatment.groups"
+clusterplot <- autoplot(seqtabc.pca, data = metamerge.match.c, colour = "Experimental.treatment.groups", frame = TRUE, frame.type = "norm") +
+  scale_colour_manual(values = c("purple", "black")) +  # Set purple and gray colors
+  theme_bw()
+print(clusterplot)
+
+```
+
+```{r}
+colnames(metamerge.match.c)[4] <- "Experimental.treatment.groups"
+clusterplot <- autoplot(seqtabc.pca, data = metamerge.match.c, colour = "Experimental.treatment.groups", frame = TRUE, frame.type = "norm") +
+  scale_colour_manual(values = c("purple", "black")) +
+  theme_bw() +
+  coord_cartesian(xlim = c(-2, 2), ylim = c(-2, 2))  # Adjust the axis limits as needed
+print(clusterplot)
+
+```
+
+```{r}
+colnames(metamerge.match.c)[4] <- "Experimental.treatment.groups"
+clusterplot <- autoplot(seqtabc.pca, data = df, colour = "Experimental.treatment.groups", frame = TRUE, frame.type = "norm") +
+  scale_colour_manual(values = c("purple", "black")) +
+  theme_bw() +
+  coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3))  # Adjust the axis limits for a slightly larger scale
+print(clusterplot)
+
+```
+
+```{r}
+df<-metamerge.match.c
+df$GroupID<- gsub("Control \\(nmba\\)", "Control", df$GroupID)
+
+#graph op1 with dots
+PCA_label_plot <-
+autoplot(seqtabc.pca, data = df, colour = "GroupID", label = FALSE,label.size = 3, shape = T, frame = T, frame.type = "norm") +
+  theme_bw()+
+  scale_colour_manual(values = c("purple", "black")) +
+  theme(axis.text = element_text(size = 10) , panel.grid.major = element_blank(),panel.grid.minor=element_blank())+
+  coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3))
+#ggsave(plot=PCA_label_plot, dev = "pdf", filename= "../figures/PCA_plot_Revised.pdf", height= , width= )
+print(PCA_label_plot)
+```
+
+```{r}
+#graph op1 with dots
+PCA_label_plot <-
+autoplot(seqtabc.pca, data = df, colour = "GroupID", label = FALSE,label.size = 3, shape = T, frame = T, frame.type = "norm") +
+  theme_bw()+
+  scale_colour_manual(values = c("purple", "black")) +
+  theme(axis.text = element_text(size = 10)) +
+  coord_cartesian(xlim = c(-3, 3), ylim = c(-3, 3))
+#ggsave(plot=PCA_label_plot, dev = "pdf", filename= "../figures/PCA_plot_Revised1.pdf", height= , width= )
+print(PCA_label_plot)
+
+```
+
+```{r}
+library(FactoMineR)
+library(ggplot2)
+
+PCA_label_plot <- autoplot(seqtabc.pca, data = df, colour = "GroupID", label = FALSE, label.size = 3, shape = TRUE, frame = TRUE, frame.type = "convex") +
+  theme_bw() +
+  scale_colour_manual(values = c("purple", "black")) +
+  theme(axis.text = element_text(size = 10)) +
+  coord_cartesian(xlim = c(-1, 1), ylim = c(-1, 1))
+print(PCA_label_plot)
+
+```
+
+```{r}
+PCA_label_plot <- 
+  autoplot(seqtabc.pca, data = df, colour = "GroupID", label = FALSE, label.size = 3, shape = TRUE, frame = TRUE, frame.type = "convex") +
+  theme_bw() +
+  scale_colour_manual(values = c("purple", "blue")) +
+  theme(axis.text = element_text(size = 10)) +
+  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-1, 1))
+
+print(PCA_label_plot)
+
+```
+
+```{r}
+
+
+```
