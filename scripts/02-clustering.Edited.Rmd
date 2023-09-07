@@ -9,8 +9,8 @@ output: html_document
 
 ```{r Load data}
 #source("00-paths.R")
-metamerge.match.c <- read.csv("01-processed-file.csv")
-seqtab.c <- read.csv("01-processed-seqtab.csv") 
+metamerge.match.c <- read.csv("../data/01-processed-file.csv")
+seqtab.c <- read.csv("../data/01-processed-seqtab.csv") 
 #Note: Unless you are using OSC, if you are on a personal computer, please re-run 01-processing.Rmd to acquire seqtab (== seqtab.c in the following codes) and metamerge.match (== metamerge.match.c in the following codes) to process your analysis to prevent long file loading time! - YL, 20220706
 ```
 
