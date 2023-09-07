@@ -4,6 +4,7 @@
 
 # Session Data files
 .RData
+.RDataTm*
 
 # Example code in package build process
 *-Ex.R
@@ -34,3 +35,6 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+# Mac specific hidden files
+.DS_Store
