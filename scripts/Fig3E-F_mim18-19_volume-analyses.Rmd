@@ -1,0 +1,98 @@
+---
+title: "mim18-19-volume-analysis"
+author: "Aadi Pallerla"
+date: "2023-08-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(readxl)
+library(broom)
+library(broom.mixed)
+library(RColorBrewer)
+library(viridisLite)
+library(svglite)
+```
+
+## Data Processing
+```{r}
+processed.data <- read.csv("../data/2023-12-01_tumor-size_R-formatted.csv") %>%
+  mutate(gavage = if_else(grepl("v1|v3", microbiome.sample),
+                          true = "Pre-BRB",
+                          false = if_else(grepl("v2|v4", microbiome.sample),
+                                          true = "Post-BRB",
+                                          false = "other"))) %>%
+  mutate(gavage = fct_relevel(gavage, "Pre-BRB")) %>%
+  mutate(treatment = fct_relevel(treatment, "IgG")) %>%
+  mutate(days2 = days.from.injection^2) 
+
+mim18.19 <- processed.data %>%
+  filter(experiment == "mimic18" | experiment == "mimic19") %>% 
+  mutate(supplement = if_else(grepl("Blautia", microbiome.sample),
+                            true = "Blautia",
+                            false = "Normal"),
+         supplement = fct_relevel(supplement, "Normal"),
+         microbiome.sample = ifelse(grepl("Blautia",microbiome.sample),
+                         "85v1 + Blautia",
+                         "85v1"))
+
+```
+
+```{r}
+
+# Boxplot
+
+box.1819 <- mim18.19 %>%
+  filter(days.from.injection == 21) %>%
+  mutate(treatment = fct_relevel(treatment, "IgG")) 
+
+box.1819 %>%
+  ggplot(aes(x = microbiome.sample, y = tumor.volume)) +
+  geom_boxplot(aes(fill = treatment)) +
+  theme_bw(base_size = 9) +
+  labs(x = "Gavage",
+       y = "Tumor Volume",
+       fill = "Treatment") +
+  scale_fill_brewer(palette = "Set1")
+
+ggsave("../figures/Fig3E_boxplot_mimic1819.png", 
+       height = 2, width = 3)
+ggsave("../figures/Fig3E_boxplot_mimic1819.svg", 
+       height = 2, width = 4)
+
+```
+
+```{r}
+
+# percent tumor free final timepoint
+
+free.1819 <- box.1819 %>%
+   mutate(new.group = paste0(microbiome.sample, treatment)) %>%
+  mutate(tumor.size.is.0 = if_else(tumor.volume > 0, 
+                                   true = 0, 
+                                   false = 1)) %>%
+  group_by(microbiome.sample, treatment) %>%
+  summarize(frac.0 = sum(tumor.size.is.0) /length(tumor.size.is.0))
+
+
+free.1819 %>%
+  ggplot(aes(x = treatment,y = frac.0, fill = microbiome.sample)) +
+  geom_bar(stat = "identity",
+           position = position_dodge()) +
+  theme_bw(base_size = 9) +
+  ylim(0,1) +
+  labs(x = "Treatment",
+       y = "% Tumor Free",
+      fill = "Sample") +
+  scale_color_brewer(palette = "Set1")
+
+ggsave("../figures/Fig3F_tumorfree_mimic1819.png", 
+       height = 2, width = 3)
+ggsave("../figures/Fig3F_tumorfree_mimic1819.svg", 
+       height = 2, width = 4)
+```
+

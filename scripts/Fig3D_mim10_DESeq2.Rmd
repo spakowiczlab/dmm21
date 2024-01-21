@@ -1,0 +1,353 @@
+---
+title: "DESeq2 mimic 16S"
+output: html_document
+date: "2023-07-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse) 
+library(ggplot2)
+library(fs)
+library(here)
+library(tools)
+library(BiocManager)
+library(broom)
+library(DESeq2)
+library(svglite)
+```
+
+```{r}
+taxa <- read_rds("../data/16S-taxa.rds") %>%
+  as.data.frame()
+
+seqtab <- read_rds("../data/16S-seqtab.rds") %>%
+  as.data.frame()
+
+key <- read_csv("../data/mimic16S-key.csv") %>%
+  select(-`...1`)
+
+```
+
+```{r processing taxa table}
+
+taxa.long <- taxa %>%
+  rownames_to_column(var="ASV") %>%
+  gather(Taxonomy,Classification,-ASV) %>%
+  group_by(ASV) %>% 
+  mutate(Taxonomy = as.factor(Taxonomy),
+         Taxonomy=fct_relevel(Taxonomy,"Kingdom","Phylum","Class","Order","Family","Genus","Species")) 
+
+taxa.spread <- taxa.long %>%
+  spread(Taxonomy,Classification) %>%
+  mutate(Phylum=if_else(is.na(Phylum),paste0("p_unclassified_",Kingdom),Phylum),
+         Class=if_else(is.na(Class),paste0("c_unclassified_",Phylum),Class),
+         Order=if_else(is.na(Order),paste0("o_unclassified_",Class),Order),
+         Family=if_else(is.na(Family),paste0("f_unclassified_",Order),Family),
+         Genus=if_else(is.na(Genus),paste0("g_unclassified_",Family),Genus),
+         Species=if_else(is.na(Species),paste0("s_unclassified_",Genus),Species))
+
+```
+
+## mimic10
+
+```{r filtering to mimic 10}
+
+key.10 <- key %>% 
+  filter(experiment == "mimic 10",timepoint == "necropsy") %>%
+  select(sampleID) %>%
+  mutate(sampleID = as.character(sampleID))
+
+seqtab.10 <- seqtab %>%
+  rownames_to_column(var = "sampleID") %>%
+  right_join(key.10, by = "sampleID")
+
+```
+
+```{r coldata}
+
+coldat <- key %>%
+  filter(experiment == "mimic 10",timepoint == "necropsy") %>%
+  select(sampleID,gavage) %>%
+  mutate(gavage=fct_relevel(gavage,"Pre-BRB"),
+         sampleID=as.character(sampleID)) %>%
+  arrange(desc(sampleID))
+
+```
+
+# Genus
+
+```{r countData}
+
+gen.count <- seqtab.10 %>%
+  gather(ASV,counts,-sampleID) %>%
+  left_join(taxa.spread,"ASV") %>%
+  group_by(sampleID,Genus) %>%
+  summarise(genus.counts=sum(counts))
+
+gen.tib <- gen.count %>%
+  spread(Genus,genus.counts) %>%
+  as_tibble() %>%
+  arrange(desc(sampleID))
+
+gen.matrix <- gen.tib %>%
+  select(-sampleID) %>%
+  as.matrix() %>%
+  t()
+
+gen.names <- gen.tib %>%
+  select(sampleID) %>%
+  as.vector()
+
+colnames(gen.matrix) <- gen.names$sampleID
+
+```
+
+```{r running DESeq}
+
+gen.DESeq <- DESeqDataSetFromMatrix(countData = gen.matrix,colData = coldat,design= ~gavage)
+
+gen.run <- DESeq(gen.DESeq)
+
+resultsNames(gen.run)
+
+gen.Result <- results(gen.run)%>%
+  as.data.frame() %>%
+  arrange(padj) %>%
+  mutate(sig.flag = ifelse(padj < .05,"S","NS"),
+         Classification = "Genus")
+
+```
+
+# Family
+
+```{r countData}
+
+fam.count <- seqtab.10 %>%
+  gather(ASV,counts,-sampleID) %>%
+  left_join(taxa.spread,"ASV") %>%
+  group_by(sampleID,Family) %>%
+  summarise(family.counts=sum(counts))
+
+fam.tib <- fam.count %>%
+  spread(Family,family.counts) %>%
+  as_tibble() %>%
+  arrange(desc(sampleID))
+
+fam.matrix <- fam.tib %>%
+  select(-sampleID) %>%
+  as.matrix() %>%
+  t()
+
+fam.names <- fam.tib %>%
+  select(sampleID) %>%
+  as.vector()
+
+colnames(fam.matrix) <- fam.names$sampleID
+
+```
+
+```{r running DESeq}
+
+fam.DESeq <- DESeqDataSetFromMatrix(countData = fam.matrix,colData = coldat,design= ~gavage)
+
+fam.run <- DESeq(fam.DESeq)
+
+resultsNames(fam.run)
+
+fam.Result <- results(fam.run)%>%
+  as.data.frame() %>%
+  arrange(padj) %>%
+  mutate(sig.flag = ifelse(padj < .05,"S","NS"),
+         Classification = "Family")
+
+```
+
+# Order
+```{r countData}
+
+ord.count <- seqtab.10 %>%
+  gather(ASV,counts,-sampleID) %>%
+  left_join(taxa.spread,"ASV") %>%
+  group_by(sampleID,Order) %>%
+  summarise(order.counts=sum(counts))
+
+ord.tib <- ord.count %>%
+  spread(Order,order.counts) %>%
+  as_tibble() %>%
+  arrange(desc(sampleID))
+
+ord.matrix <- ord.tib %>%
+  select(-sampleID) %>%
+  as.matrix() %>%
+  t()
+
+ord.names <- ord.tib %>%
+  select(sampleID) %>%
+  as.vector()
+
+colnames(ord.matrix) <- ord.names$sampleID
+
+```
+
+```{r running DESeq}
+
+ord.DESeq <- DESeqDataSetFromMatrix(countData = ord.matrix,colData = coldat,design= ~gavage)
+
+ord.run <- DESeq(ord.DESeq)
+
+resultsNames(ord.run)
+
+ord.Result <- results(ord.run)%>%
+  as.data.frame() %>%
+  arrange(padj) %>%
+  mutate(sig.flag = ifelse(padj < .05,"S","NS"),
+         Classification = "Order")
+
+```
+
+# Class
+```{r countData}
+
+cla.count <- seqtab.10 %>%
+  gather(ASV,counts,-sampleID) %>%
+  left_join(taxa.spread,"ASV") %>%
+  group_by(sampleID,Class) %>%
+  summarise(class.counts=sum(counts))
+
+cla.tib <- cla.count %>%
+  spread(Class,class.counts) %>%
+  as_tibble() %>%
+  arrange(desc(sampleID))
+
+cla.matrix <- cla.tib %>%
+  select(-sampleID) %>%
+  as.matrix() %>%
+  t()
+
+cla.names <- cla.tib %>%
+  select(sampleID) %>%
+  as.vector()
+
+colnames(cla.matrix) <- cla.names$sampleID
+
+```
+
+```{r running DESeq}
+
+cla.DESeq <- DESeqDataSetFromMatrix(countData = cla.matrix,colData = coldat,design= ~gavage)
+
+cla.run <- DESeq(cla.DESeq)
+
+resultsNames(cla.run)
+
+cla.Result <- results(cla.run)%>%
+  as.data.frame() %>%
+  arrange(padj) %>%
+  mutate(sig.flag = ifelse(padj < .05,"S","NS"),
+         Classification = "Class")
+
+```
+
+# Phylum 
+```{r countData}
+
+phy.count <- seqtab.10 %>%
+  gather(ASV,counts,-sampleID) %>%
+  left_join(taxa.spread,"ASV") %>%
+  group_by(sampleID,Phylum) %>%
+  summarise(phylum.counts=sum(counts))
+
+phy.tib <- phy.count %>%
+  spread(Phylum,phylum.counts) %>%
+  as_tibble() %>%
+  arrange(desc(sampleID))
+
+phy.matrix <- phy.tib %>%
+  select(-sampleID) %>%
+  as.matrix() %>%
+  t()
+
+phy.names <- phy.tib %>%
+  select(sampleID) %>%
+  as.vector()
+
+colnames(phy.matrix) <- phy.names$sampleID
+
+```
+
+```{r running DESeq}
+
+phy.DESeq <- DESeqDataSetFromMatrix(countData = phy.matrix,colData = coldat,design= ~gavage)
+
+phy.run <- DESeq(phy.DESeq)
+
+resultsNames(phy.run)
+
+phy.Result <- results(phy.run)%>%
+  as.data.frame() %>%
+  arrange(padj) %>%
+  mutate(sig.flag = ifelse(padj < .05,"S","NS"),
+         Classification = "Phylum")
+
+```
+
+
+## Volcano Plot
+
+```{r data prep}
+
+gen.filter <-
+  gen.Result[complete.cases(gen.Result),]
+fam.filter <-
+  fam.Result[complete.cases(fam.Result),]
+ord.filter <-
+  ord.Result[complete.cases(ord.Result),]
+cla.filter <-
+  cla.Result[complete.cases(cla.Result),]
+phy.filter <-
+  phy.Result[complete.cases(phy.Result),]
+
+mim.total <- bind_rows(gen.filter,
+                        fam.filter,
+                        ord.filter,
+                        cla.filter,
+                        phy.filter) 
+
+volcdat <- mim.total %>%
+  select(Classification,log2FoldChange,padj,sig.flag) %>%
+  rownames_to_column(var = "Taxa") %>%
+  mutate(Class.Sig=if_else(padj < .05,Classification,
+                         NA_character_))
+  
+```
+
+```{r}
+
+volcdat %>%
+  ggplot(aes(x=log2FoldChange,
+             y=-log(padj),
+             color=Class.Sig,
+             label=Taxa)) + 
+  geom_point() + 
+  geom_hline(yintercept = -log(0.05),
+             color="red") + 
+  geom_vline(xintercept = c(-4,4),color="red") + 
+  guides(color=guide_legend("Tax")) +
+  geom_text_repel(data=subset(volcdat,
+                              -log(padj) > -log(0.05)), show.legend = FALSE) + 
+  theme_bw(base_size = 9) +
+  labs(title = "") +
+  guides(color = guide_legend(title="Taxonomy Level")) +
+  scale_color_brewer(palette="Set1",
+                     na.value="gray50",
+              breaks=c("Phylum","Class","Order","Family","Genus"))
+
+ggsave("../figures/Fig3D_16S-Volc_mimic10_lineplot.png", 
+       height = 2, width = 3)
+ggsave("../figures/Fig3D_16S-Volc_mimic10_lineplot.svg", 
+       height = 2, width = 4)
+
+```
+
