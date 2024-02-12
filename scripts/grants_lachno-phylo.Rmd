@@ -1,0 +1,248 @@
+---
+title: "Lachno phylogeny enrichment"
+author: "Rebecca Hoyd"
+date: "2/6/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(stringr)
+library(ggdendro)
+library(ape) 
+library(phytools)
+library(ggnewscale)
+```
+
+# Load data
+
+```{r}
+modres <- readRDS("../data/BEWELL/glm_binomial_model.RData")
+mics <- read.csv("../data/BEWELL/bewell_taxonomy_relAbun.csv", stringsAsFactors = F)
+
+responders <- paste0("HONC60-", c(68,79,84,85))
+```
+
+# Define lachno groups
+
+## All Lachnospira in our microbe results
+
+```{r}
+lachno.members <- unique(subset(mics$Taxonomy, grepl("f__Lachno", mics$Taxonomy)))
+
+lachno.remtax <- str_remove(lachno.members,".*\\|")
+lachno.taxids <- unique(subset(mics$TaxNum, grepl("f__Lachno", mics$Taxonomy)))
+writeLines(lachno.taxids, "../data/BEWELL/lachnospiraceae-taxids.txt")
+```
+
+## Lachno associated with BRB
+
+```{r}
+brb.enriched <- modres %>%
+  filter(estimate > 0 &
+           term %in% lachno.remtax &
+           p.value < 0.1)
+
+
+```
+
+## Lachno present in responders
+
+```{r}
+lachno.resp <- mics %>%
+  filter(Subject.ID %in% responders & Taxonomy %in% lachno.members)
+lachno.resp.tax <- unique(lachno.resp$Taxonomy)
+lachno.resp.remtax <- gsub(".*\\|", "", lachno.resp.tax)
+
+```
+
+```{r}
+brb.enriched.taxids <- mics %>%
+  select(Taxonomy, TaxNum) %>%
+  distinct() %>%
+  mutate(nodeleaf = gsub(".*\\|", "", Taxonomy)) %>%
+  filter(nodeleaf %in% brb.enriched$term)
+```
+
+# Format for phylo plot
+
+
+```{r}
+lachspecs <- gsub(".*(g__.*)", "\\1", subset(lachno.members, grepl("s__", lachno.members)))
+
+lach.genspec <- as.data.frame(cbind(genus = gsub("\\|.*", "", lachspecs),
+                                   species = gsub(".*\\|", "", lachspecs))) 
+
+# Get the coordinates of the points
+lach.genspec.xvals <- lach.genspec %>%
+  arrange(genus) %>%
+  mutate(specx = row_number(),
+         specy = 4,
+         geny = 3) %>%
+  mutate(genx = median(specx), .by = genus)
+
+lachno.pointsdf <- lach.genspec.xvals %>%
+  select(genus, genx, geny) %>%
+  bind_rows(select(lach.genspec.xvals, species, specx, specy) %>%
+              rename("genus" = "species", "genx" = "specx", "geny" = "specy"))
+
+# Add enriched info to the points
+lachno.pointsdf.BRB <- lachno.pointsdf %>%
+  mutate(colgroup = "Enriched in BRB",
+         colcode = ifelse(genus %in% brb.enriched$term, "BRB", NA))
+lachno.pointsdf.resp <- lachno.pointsdf %>%
+  mutate(colgroup = "Enriched in responders",
+         colcode = ifelse(genus %in% lachno.resp.remtax, "Responder", NA))
+
+lachno.points.plot <- bind_rows(lachno.pointsdf.BRB, lachno.pointsdf.resp)
+
+# Build tree structure
+
+add.lachconnect <- lach.genspec.xvals %>%
+  select(-species, -specx, -specy) %>%
+  mutate(specx = genx, specy = 1) %>%
+  distinct()
+add.treebranch <- lach.genspec.xvals %>%
+  mutate(x1 = min(specx),
+         x2 = max(specx),
+         .by = "genus") %>%
+  select(genus, x1, x2) %>%
+  distinct() %>%
+  rename("specx" = "x1",
+         "genx" = "x2") %>%
+  mutate(genus = paste0(genus, "_branch"),
+         specy = 3, geny = 3
+         ) 
+lachno.genspec.plot <- lach.genspec.xvals %>%
+  mutate(genx = specx) %>%
+  bind_rows(add.lachconnect) %>%
+  bind_rows(add.treebranch)
+
+# lach.treedf <- lach.genspec %>%
+#   group_by(genus) %>%
+#   summarise("leaves" = paste0("(", paste(species, collapse = ","), ")"))
+# 
+# lachno.tree <- paste0("(", paste(lach.treedf$leaves, collapse = ","), ");")
+# lachno.tree2 <- read.tree(text = lachno.tree, file = NULL)
+```
+# Plot
+
+```{r}
+# plotTree(lachno.tree2)
+```
+
+```{r}
+ggplot() +
+  facet_wrap(vars(colgroup)) +
+  geom_segment(data = lachno.genspec.plot, aes(x = genx, y = geny, xend = specx, yend = specy)) +
+  geom_point(data = lachno.points.plot, aes(x = genx, y = geny, color = colcode),
+             show.legend = F, size = 2.5) +
+  coord_polar() +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "", y = "") +
+  lims(y = c(1,4), x = c(0,50)) +
+  theme_bw() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+ggsave("../figures/circle_lachno-brb-responder.png")
+```
+
+# Alternate coloring
+
+## Get BRB fold change
+
+```{r}
+fc.prep <- mics %>%
+  filter(Taxonomy %in% lachno.members & grepl("g__", Taxonomy)) %>%
+  mutate(species = gsub(".*\\|", "", Taxonomy),
+         genus = gsub(".*\\|(g__.*)", "\\1", Taxonomy),
+         brb.code = ifelse(variable == "tB", "treatment", "control")) 
+
+fc.spec <- fc.prep %>%
+  filter(!grepl("g__", species)) %>%
+  select(sample, species, RelAbun, brb.code) %>%
+  pivot_wider(names_from = "species", values_from = "RelAbun", values_fill = 0) %>%
+  pivot_longer(-c("sample", "brb.code"), names_to = "species", values_to = "RelAbun") %>%
+  group_by(species, brb.code) %>%
+  summarise(mean.ra = mean(RelAbun)) %>%
+  pivot_wider(names_from = "brb.code", values_from = "mean.ra") %>%
+  mutate(l2fc = log(treatment/control),
+         l2fc = case_when(!l2fc %in% c(Inf, -Inf) ~ l2fc)) %>%
+  rename("genus" = "species") %>%
+  select(genus, l2fc)
+
+fc.gen <- fc.prep %>%
+  mutate(genus = str_remove(genus, "\\|s__.*")) %>%
+  select(sample, genus, RelAbun, brb.code) %>%
+  group_by(sample, genus, brb.code) %>%
+  summarise(RelAbun = sum(RelAbun)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "genus", values_from = "RelAbun", values_fill = 0) %>%
+  pivot_longer(-c("sample", "brb.code"), names_to = "genus", values_to = "RelAbun") %>%
+  group_by(genus, brb.code) %>%
+  summarise(mean.ra = mean(RelAbun)) %>%
+  pivot_wider(names_from = "brb.code", values_from = "mean.ra") %>%
+  mutate(l2fc = log(treatment/control),
+         l2fc = case_when(!l2fc %in% c(Inf, -Inf) ~ l2fc)) %>%
+  select(genus, l2fc)
+
+points.foldchange <- bind_rows(fc.spec, fc.gen) %>%
+  right_join(lachno.pointsdf.BRB)
+```
+
+## Get Responder median RAs
+
+```{r}
+respRA.prep <- mics %>%
+  filter(Taxonomy %in% lachno.members & Subject.ID %in% responders & grepl("g__", Taxonomy)) %>%
+  mutate(species = gsub(".*\\|", "", Taxonomy),
+         genus = gsub(".*\\|(g__.*)", "\\1", Taxonomy)) 
+
+respRA.spec <- respRA.prep %>%
+  filter(!grepl("g__", species)) %>%
+  select(sample, species, RelAbun) %>%
+  pivot_wider(names_from = "species", values_from = "RelAbun", values_fill = 0) %>%
+  pivot_longer(-sample, names_to = "species", values_to = "RelAbun") %>%
+  summarise(spec.RA = median(RelAbun), .by = species) %>%
+  rename("genus" = "species")
+
+respRA.gen <- respRA.prep %>%
+  mutate(genus = str_remove(genus, "\\|s__.*")) %>%
+  group_by(sample, genus) %>%
+  summarise(RelAbun = sum(RelAbun)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = "genus", values_from = "RelAbun", values_fill = 0) %>%
+  pivot_longer(-sample, names_to = "genus", values_to = "RelAbun") %>%
+  summarise(spec.RA = median(RelAbun), .by = genus) 
+
+points.respRA <- bind_rows(respRA.gen, respRA.spec) %>%
+  right_join(lachno.pointsdf.resp) %>%
+  drop_na(colcode)
+
+```
+
+## Complicated plot command
+
+```{r}
+ggplot() +
+  facet_wrap(vars(colgroup)) +
+  geom_segment(data = lachno.genspec.plot, aes(x = genx, y = geny, xend = specx, yend = specy)) +
+  geom_point(data = points.foldchange, aes(x = genx, y = geny, color = l2fc),
+             size = 2.5) +
+  coord_polar() +
+  scale_color_viridis_c(option = "A", name = "log2FoldChange") +
+  labs(x = "", y = "") +
+  lims(y = c(1,4), x = c(0,50)) +
+  theme_bw() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank()) +
+  new_scale_color() +
+  geom_point(data = rename(points.respRA, "l2fc" = "spec.RA"), aes(x = genx, y = geny, color = l2fc),
+             size = 2.5) +
+  scale_color_continuous(type = "viridis", name = "Median RA\nin Responders")
+ggsave("../figures/circle_lachno-brb-responder_2scale.png")
+```
