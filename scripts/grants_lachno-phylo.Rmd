@@ -10,11 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(stringr)
-library(ggdendro)
-library(ape) 
-library(phytools)
 library(ggnewscale)
-
+library(taxize)
+library(phytools)
+library(phylobase)
 ```
 
 # Load data
@@ -246,4 +245,154 @@ ggplot() +
              size = 2.5) +
   scale_color_continuous(type = "viridis", name = "Median RA\nin Responders")
 ggsave("../figures/circle_lachno-brb-responder_2scale.png")
+```
+
+# Phylogenetic tree structure
+
+## Retrieve new segments and point coords for plot
+
+```{r}
+lachno.taxids.leaf <- as.numeric(str_remove(subset(lachno.taxids, str_count(lachno.taxids, "\\|") == 6),
+                                             ".*\\|"))
+taxize_lachnos <- classification(lachno.taxids.leaf, db = "ncbi")
+ncbitree <- class2tree(taxize_lachnos, check = T)
+```
+
+```{r}
+png("../figures/phylogeny_default-lachno-plot.png")
+plot(ncbitree)
+dev.off()
+
+plot(ncbitree, show.node = T)
+```
+
+need to do: take points df and get it joined to the older continuous variable tables
+
+```{r}
+getPhyloSegments <- function(phylotree, taxids){
+  
+  taxidkey <- as.data.frame(cbind(tname = phylotree$tip.label,
+                                  taxid = as.character(taxids)))
+  
+  # Generate xy coords for edges and nodes
+  tmp1 <- as(phylotree, "phylo4")
+  tmp <- phylobase::phyloXXYY(tmp1)
+  
+  # Handle node labelling. To explain this strange set up: in the label vector, it presents the tip labels and then the internal labels, each in order. However, the xx and yy values resulting from phylobase XXYY have ALL nodes, internal and external, listed in order. It is possible to determine which nodes are tips as they have the maximum x value, so I separate the database via this measure and preserve its order so that I can apply each set of node lables and rejoin.
+  nodepts.unlab <- as.data.frame(cbind(xx = tmp$xx, yy = tmp$yy)) %>%
+    mutate(xx = as.numeric(xx),
+           yy = as.numeric(yy))
+  nodepts.unlab$tname <- tmp$phy@label[tmp$phy@edge[,2]]
+
+  # nodepts.tip <- nodepts.unlab %>%
+  #   filter(xx >= .9999)
+  # nodepts.tip$tname <- tmp$phy@label[1:length(phylotree$tip.label)]
+
+  # nodepts.int <- nodepts.unlab %>%
+  #   filter(xx < .9999)
+  # nodepts.int$tname <- tmp$phy@label[(length(phylotree$tip.label)+1):length(tmp$phy@label)]
+
+  nodepts <- nodepts.unlab %>%
+    left_join(taxidkey)
+  
+  
+  # Make segments into a long df, instead of separated by horizontal and vertical segments.
+  segs1 <- as.data.frame(tmp$segs)[,1:4]
+  segs2 <- as.data.frame(tmp$segs)[,5:8]
+  colnames(segs2) <- gsub("h", "v", colnames(segs2))
+  segs <- bind_rows(segs1,segs2)
+  
+  # I still don't understand the node ordering, but I now believe I can make it work by pulling the node data from the edge data frame, where at least everything is labelled.
+  nodelabs.alt <- as.data.frame(tmp$segs)
+  nodelabs.alt$egde <- getEdge(tmp$phy)
+  nodelabs.alt <- nodelabs.alt %>%
+    separate(egde, into = c("ancestor", "descendent"))
+  
+  
+  phylcoords <- list(segs, nodepts)
+  names(phylcoords) <- c("Segments", "Nodes")
+  return(phylcoords)
+}
+
+phylo.coords <- getPhyloSegments(ncbitree$phylo, lachno.taxids.leaf)
+
+# phylo.coords$Nodes$taxid <- as.character(c(lachno.taxids.leaf, rep(NA, nrow(phylo.coords$Nodes) - length(lachno.taxids.leaf))))
+```
+
+```{r}
+manualCoords <- function(phytree){
+  edgepairs <- phytree$edges
+  edgelengths <- phytree$edge.length
+  
+  allnodes <- c(phytree$tip.label, phytree$node.label)
+  is_tip <- phytree$edge[,2] <= length(phytree$tip.label)
+  ordered_tips <- tree2$edge[is_tip, 2]
+  tree2$tip.label[ordered_tips]
+}
+```
+
+## Matching to continuous data for points
+
+Note on "missing" genera nodes: when a genera only has one member, taxize builds a tree omitting that genera and moving straight to the species. I believe this is appropriate for out data, so I am not going to try and force it to display a node. It also looks like that would be really difficult.
+```{r}
+gen.match <- as.data.frame(cbind(genus = subset(lachno.pointsdf$genus, grepl("g__", lachno.pointsdf$genus)))) %>%
+  mutate(tname = str_remove(genus, "g__")) %>%
+  distinct()
+  # mutate(goodmatch = tname %in% phylo.coords$Nodes$tname)
+
+
+
+# Species matching
+pdf.matching <- as.data.frame(cbind(taxid = gsub(".*\\|", "", lachno.taxids),
+                                    genus2 = lachno.remtax))
+
+nodes.forjoin <- phylo.coords$Nodes %>%
+  left_join(pdf.matching) %>%
+  left_join(gen.match) %>%
+  mutate(genus = coalesce(genus, genus2)) %>%
+  drop_na(genus)
+```
+
+```{r}
+phylopoints.BRB <- nodes.forjoin %>%
+  left_join(points.foldchange) %>%
+  distinct() %>%
+  mutate(colgroup = gsub("in", "by", colgroup))
+
+phylopoints.resp <- nodes.forjoin %>%
+  left_join(points.respRA) %>%
+  distinct() %>%
+  drop_na(colcode) %>%
+  mutate(colgroup = gsub("Enriched", "Abundance", colgroup))
+```
+
+```{r}
+ggplot(phylo.coords$Segments) +
+  geom_segment(aes(x = v0x, y = v0y, xend = v1x, yend = v1y)) +
+  geom_point(data = as.data.frame(cbind(xx = tmp$xx, yy = tmp$yy)), aes(y = yy, x = xx), inherit.aes = F)
+```
+
+## Plot
+
+```{r}
+ggplot(phylo.coords$Segments) +
+  facet_wrap(vars(fct_relevel(colgroup, "Enriched by BRB"))) +
+  geom_segment(aes(y = v0x, x = v0y, yend = v1x, xend = v1y)) +
+  geom_point(data = phylopoints.BRB, aes(x = yy, y = xx, color = l2fc),
+             size = 2.5) +
+  coord_polar() +
+  scale_color_viridis_c(option = "A", name = "log2FoldChange") +
+  lims(x = c(0,1.05)) +
+  labs(x = "", y = "") +
+  theme_bw() +
+  theme(strip.text = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank()) +
+  new_scale_color() +
+  geom_point(data = rename(phylopoints.resp, "l2fc" = "spec.RA"), aes(x = yy, y = xx, color = l2fc),
+             size = 2.5) +
+  scale_color_continuous(type = "viridis", name = "Median RA\nin Responders")
+ggsave("../figures/circle_lachno_phylo-continuous.png")
 ```
