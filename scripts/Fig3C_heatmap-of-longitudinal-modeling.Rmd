@@ -666,20 +666,17 @@ mimic.modeling1 <- mimic.modeling1 %>%
   rename(`Effect Size` = estimate) 
 
 mimic.modeling1 %>%
-  filter(Group != "ICI Controls") %>%
   ggplot(aes(x = `Combined ID`, y = term.adj, fill = `Effect Size`)) +
-  geom_tile(aes(alpha=sig.flag),show.legend = T) +
+  geom_tile(aes(alpha=sig.flag),show.legend = FALSE) +
   scale_fill_viridis_c() +
   facet_wrap(~ Group, ncol = 3, scales= "free_x", strip.position = "top") +
-  theme_minimal(base_size = 9) +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        strip.text.x = element_text(size = 9),
+        strip.text.x = element_text(size = 10),
         strip.background = element_blank(),
         strip.placement = "outside") +
   labs(x = "", y = "")
 
-ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1_grant.png",
-       height =  2, width = 4)
 
 ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1.png",
        height =  6, width = 6)
@@ -687,7 +684,6 @@ ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1.svg",
        height =  6, width = 6)
 
 ```
-
 ```{r}
 mimic.modeling %>%
   mutate(term.adj = gsub("days2:(.*)", "\\1", term)) %>%
@@ -726,7 +722,7 @@ mimic.modeling %>%
   labs(x = "", y = "") +
   guides(fill=guide_legend(title=""))
 
-#ggsave()
+ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling_grantversion.png",
+       height =  2, width = 3.25)
 ```
-
 
