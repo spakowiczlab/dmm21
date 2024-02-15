@@ -626,3 +626,62 @@ ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling.svg",
        height =  6, width = 6)
 ```
 
+```{r}
+mimic.modeling1 <- mimic.modeling %>%
+  mutate(`Combined ID` = case_when(
+    `Combined ID` == "Non-responder (DL081)" ~ "Non-responder",
+    `Combined ID` == "Responder (DL017)" ~ "Responder",
+    TRUE ~ `Combined ID`
+  ))
+
+mimic.modeling1 <- mimic.modeling1 %>%
+  mutate(term.adj = gsub("days2:(.*)", "\\1", term)) %>%
+  mutate(term.adj = gsub("treatmentPD1", "treatmentAnti-PD1", term)) %>%
+  filter(!grepl("mimic4|mimic9", experiment)) %>%
+  filter(grepl("days2:", term)) %>%
+  mutate(term.adj = str_replace(term.adj, "treatmentAnti-PD1", "Anti-PD1")) %>%
+  mutate(term.adj = str_replace(term.adj, "gavagePost-BRB", "Gavage")) %>%
+  mutate(term.adj = str_replace(term.adj, "ResponseResponder", "Gavage")) %>%
+  mutate(term.adj = str_replace(term.adj, "ResponseNon-responder", "Gavage")) %>%
+  mutate(term.adj = str_remove(term.adj, "days2:")) %>%
+  mutate(term.adj = fct_relevel(term.adj, "Anti-PD1:Gavage", "Anti-PD1", "Gavage")) %>%
+  mutate(`Combined ID` = fct_relevel(`Combined ID`,
+                                     "Non-responder",
+                                     "Responder",
+                                     "Random (102)",
+                                     "Random (55)",
+                                     "Blautia (84)",
+                                     "Blautia (85)",
+                                     "Roseburia (68)",
+                                     "Lachnospira (79)"))
+# New group assignment
+mimic.modeling1 <- mimic.modeling1 %>%
+  mutate(Group = case_when(
+    `Combined ID` %in% c("Non-responder", "Responder") ~ "ICI Controls",
+    `Combined ID` %in% c("Random (102)", "Random (55)") ~ "Random",
+    `Combined ID` %in% c("Blautia (84)", "Blautia (85)", "Roseburia (68)", "Lachnospira (79)") ~ "Lachnospiraceae",
+    TRUE ~ "Other" # For any cases not matched above
+  )) %>%
+  mutate(Group = factor(Group, levels = c("ICI Controls", "Random", "Lachnospiraceae"))) %>%
+  rename(`Effect Size` = estimate) 
+
+mimic.modeling1 %>%
+  ggplot(aes(x = `Combined ID`, y = term.adj, fill = `Effect Size`)) +
+  geom_tile(aes(alpha=sig.flag),show.legend = FALSE) +
+  scale_fill_viridis_c() +
+  facet_wrap(~ Group, ncol = 3, scales= "free_x", strip.position = "top") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.text.x = element_text(size = 10),
+        strip.background = element_blank(),
+        strip.placement = "outside") +
+  labs(x = "", y = "")
+
+
+ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1.png",
+       height =  6, width = 6)
+ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1.svg",
+       height =  6, width = 6)
+
+```
+
