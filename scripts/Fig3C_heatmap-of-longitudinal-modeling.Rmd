@@ -666,17 +666,20 @@ mimic.modeling1 <- mimic.modeling1 %>%
   rename(`Effect Size` = estimate) 
 
 mimic.modeling1 %>%
+  filter(Group != "ICI Controls") %>%
   ggplot(aes(x = `Combined ID`, y = term.adj, fill = `Effect Size`)) +
-  geom_tile(aes(alpha=sig.flag),show.legend = FALSE) +
+  geom_tile(aes(alpha=sig.flag),show.legend = T) +
   scale_fill_viridis_c() +
   facet_wrap(~ Group, ncol = 3, scales= "free_x", strip.position = "top") +
-  theme_minimal() +
+  theme_minimal(base_size = 9) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        strip.text.x = element_text(size = 10),
+        strip.text.x = element_text(size = 9),
         strip.background = element_blank(),
         strip.placement = "outside") +
   labs(x = "", y = "")
 
+ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1_grant.png",
+       height =  2, width = 4)
 
 ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1.png",
        height =  6, width = 6)
@@ -684,4 +687,46 @@ ggsave("../figures/Fig3C_heatmap-of-longitudinal-modeling1.svg",
        height =  6, width = 6)
 
 ```
+
+```{r}
+mimic.modeling %>%
+  mutate(term.adj = gsub("days2:(.*)", "\\1", term)) %>%
+  mutate(term.adj = gsub("treatmentPD1", "treatmentAnti-PD1", term)) %>%
+  filter(!grepl("mimic4|mimic9", experiment)) %>%
+  filter(grepl("days2:", term)) %>%
+  mutate(term.adj = str_replace(term.adj, "treatmentAnti-PD1", "Anti-PD1")) %>%
+  mutate(term.adj = str_replace(term.adj, "gavagePost-BRB", "Gavage")) %>%
+  mutate(term.adj = str_replace(term.adj, "ResponseResponder", "Gavage")) %>%
+  mutate(term.adj = str_replace(term.adj, "ResponseNon-responder", "Gavage")) %>%
+  mutate(term.adj = str_remove(term.adj, "days2:")) %>%
+  mutate(term.adj = fct_relevel(term.adj,"Anti-PD1:Gavage","Anti-PD1","Gavage")) %>%
+  mutate(`Combined ID` = fct_relevel(`Combined ID`,
+                                     "Non-responder (DL081)",
+                                     "Responder (DL017)",
+                                     "Random (102)", 
+                                     "Random (55)", 
+                                     "Blautia (84)",
+                                     "Blautia (85)",
+                                     "Roseburia (68)",
+                                     "Lachnospira (79)"),
+         fac = ifelse(grepl("Random", hypothesis), "Random",
+                        ifelse(grepl("Roseburia|Lachnospira|Blautia", hypothesis), "Lachnospiraceae", NA))) %>%
+  filter(!is.na(fac)) %>%
+  ggplot(aes(x = `Combined ID`, y = term.adj, fill = estimate, alpha = sig.flag)) +
+  geom_tile(color = "black") +
+  scale_fill_viridis_c() +
+  #coord_fixed() +
+  facet_grid(.~fac,
+             scales="free",
+             space = "free") +
+  guides(alpha = "none") +
+  theme_minimal(base_size = 9) +
+  #theme_bw() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  labs(x = "", y = "") +
+  guides(fill=guide_legend(title=""))
+
+#ggsave()
+```
+
 
