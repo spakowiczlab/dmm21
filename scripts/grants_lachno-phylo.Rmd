@@ -278,19 +278,12 @@ getPhyloSegments <- function(phylotree, taxids){
   tmp1 <- as(phylotree, "phylo4")
   tmp <- phylobase::phyloXXYY(tmp1)
   
-  # Handle node labelling. To explain this strange set up: in the label vector, it presents the tip labels and then the internal labels, each in order. However, the xx and yy values resulting from phylobase XXYY have ALL nodes, internal and external, listed in order. It is possible to determine which nodes are tips as they have the maximum x value, so I separate the database via this measure and preserve its order so that I can apply each set of node lables and rejoin.
+  # Handle node labelling. To get the labels into the correct order, look at the edges object in the phy object contained in the phylo4 object. Pull the descendents column and it will have the order of the tips. Do not try to use the edge order or tip labels from the top level of the phylo4 object.
+  
   nodepts.unlab <- as.data.frame(cbind(xx = tmp$xx, yy = tmp$yy)) %>%
     mutate(xx = as.numeric(xx),
            yy = as.numeric(yy))
   nodepts.unlab$tname <- tmp$phy@label[tmp$phy@edge[,2]]
-
-  # nodepts.tip <- nodepts.unlab %>%
-  #   filter(xx >= .9999)
-  # nodepts.tip$tname <- tmp$phy@label[1:length(phylotree$tip.label)]
-
-  # nodepts.int <- nodepts.unlab %>%
-  #   filter(xx < .9999)
-  # nodepts.int$tname <- tmp$phy@label[(length(phylotree$tip.label)+1):length(tmp$phy@label)]
 
   nodepts <- nodepts.unlab %>%
     left_join(taxidkey)
@@ -302,12 +295,6 @@ getPhyloSegments <- function(phylotree, taxids){
   colnames(segs2) <- gsub("h", "v", colnames(segs2))
   segs <- bind_rows(segs1,segs2)
   
-  # I still don't understand the node ordering, but I now believe I can make it work by pulling the node data from the edge data frame, where at least everything is labelled.
-  nodelabs.alt <- as.data.frame(tmp$segs)
-  nodelabs.alt$egde <- getEdge(tmp$phy)
-  nodelabs.alt <- nodelabs.alt %>%
-    separate(egde, into = c("ancestor", "descendent"))
-  
   
   phylcoords <- list(segs, nodepts)
   names(phylcoords) <- c("Segments", "Nodes")
@@ -317,18 +304,6 @@ getPhyloSegments <- function(phylotree, taxids){
 phylo.coords <- getPhyloSegments(ncbitree$phylo, lachno.taxids.leaf)
 
 # phylo.coords$Nodes$taxid <- as.character(c(lachno.taxids.leaf, rep(NA, nrow(phylo.coords$Nodes) - length(lachno.taxids.leaf))))
-```
-
-```{r}
-manualCoords <- function(phytree){
-  edgepairs <- phytree$edges
-  edgelengths <- phytree$edge.length
-  
-  allnodes <- c(phytree$tip.label, phytree$node.label)
-  is_tip <- phytree$edge[,2] <= length(phytree$tip.label)
-  ordered_tips <- tree2$edge[is_tip, 2]
-  tree2$tip.label[ordered_tips]
-}
 ```
 
 ## Matching to continuous data for points
