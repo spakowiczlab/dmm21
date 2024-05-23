@@ -1,0 +1,67 @@
+---
+title: "Figure 2 (rberry)"
+author: "Rebecca Hoyd"
+date: "5/23/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggtext)
+```
+
+# Load data
+
+```{r}
+load("../data/figure-data/desres_rberry.rda")
+```
+
+# PCA
+
+# Volcano
+
+```{r}
+rber.desres %>%
+  mutate(Tax.Sig=ifelse(padj < .05,TaxLev, NA),
+        class.dum = ifelse(padj < 0.05, Taxa, NA)) %>%
+  ggplot(aes(x=log2FoldChange,
+             y=-log(padj),
+             color=Tax.Sig,
+             label=class.dum)) + 
+  geom_point() + 
+  geom_hline(yintercept = -log(0.05),
+             color="red") + 
+  geom_vline(xintercept = c(-4,4),color="red") + 
+  guides(color=guide_legend("Tax")) + 
+  geom_text_repel( show.legend = FALSE) + 
+  ggtitle("Black Raspberry vs. NMBA Control") + 
+  theme_bw() + 
+  scale_color_brewer(palette="Set1",
+                     na.value="gray50",
+                     breaks=c("Phylum","Class","Order","Family","Genus")) 
+
+ggsave("../figures/volcano_rberry-mics.png")
+```
+
+# LDA
+
+```{r}
+brb.sig <-
+  rber.desres %>%
+  filter(padj < .05) 
+
+
+brb.sig %>%
+  ggplot(aes(x=log2FoldChange,
+             y=reorder(Taxa,log2FoldChange),
+             fill=TaxLev)) + 
+  geom_bar(stat = "identity") + 
+  theme_bw() + 
+  ggtitle("Effect Size BRB vs. NMBA - Significant Taxa") +
+  ylab("Microbe Classification") +
+  scale_fill_brewer(palette = "Set1") 
+
+ggsave("../figures/effecti-size_rberry-mics.png")
+```

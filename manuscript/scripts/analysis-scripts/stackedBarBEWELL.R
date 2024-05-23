@@ -1,0 +1,46 @@
+stackedBarBEWELL <- function(exora, nphyl){
+ 
+  get_phyl_ra <- function(exora){
+    exora.phyl <- exora %>%
+      group_by(sample, Phylum) %>%
+      summarise(ra = sum(RelAbun, na.rm = T)) %>%
+      as.data.frame()
+  } 
+  
+  taxa <- exora %>% 
+    separate(Taxonomy, c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus"), "\\|")
+  
+  taxa <- taxa %>%
+    filter(!is.na(Phylum))
+  
+  exora.p <- get_phyl_ra(taxa)
+  
+  large.phyls <- exora.p %>% 
+    group_by(Phylum) %>%
+    summarize(median.ra = median(ra)) %>%
+    arrange(desc(median.ra)) %>%
+    mutate(x = row_number()) %>%
+    dplyr::filter(x <= nphyl)
+  large.phyls <- large.phyls$Phylum
+  
+  tmp <- exora.p %>% 
+    filter(Phylum == large.phyls[1]) %>%
+    arrange(desc(ra))
+  sampord.orter <- tmp$sample
+  
+  vars <- df %>% 
+    select(sample, variable) %>% 
+    distinct()
+  
+  exora.p.hist <- vars %>%
+    right_join(exora.p) %>%
+    mutate(Phylum = ifelse(Phylum %in% large.phyls, Phylum, "Other"),
+           Phylum = gsub("^p__", "", Phylum),
+           sample = fct_relevel(sample, sampord.orter),
+           timepoint = case_when(variable == "rB" ~ "Pre-BRB",
+                                 variable == "tB" ~ "Post-BRB",
+                                 variable == "rP" ~ "Pre-Placebo",
+                                 variable == "tP" ~ "Post-Placebo"))
+  
+  return(exora.p.hist)
+}

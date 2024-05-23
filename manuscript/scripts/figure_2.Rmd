@@ -1,0 +1,75 @@
+---
+title: "Figure 2 (BEWELL)"
+author: "Rebecca Hoyd"
+date: "5/23/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggtext)
+```
+
+# Load data
+
+```{r}
+load("../data/figure-data/stackedbar_bewell.rda")
+load("../data/figure-data/model_stats_BW.rda")
+```
+
+# Stacked bar
+
+```{r}
+stackdatBW %>% 
+  ggplot(aes(x = sample, y = ra, fill = Phylum)) +
+  facet_row(vars(timepoint), scales = "free_x", space = "free") +
+  geom_bar(position="fill", stat = "identity") +
+  labs(x = "", y = "") +
+  scale_fill_manual(values = c("darkslateblue", "darkgoldenrod2","cornflowerblue", "darkgreen", "darkorange4","salmon2", "cornflowerblue", "deeppink4" ,"cyan4", "salmon2"), name = "Taxa") +
+  theme_minimal(base_size = 10) +
+  theme(axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid.major = element_blank()) 
+
+ggsave(file = "../figures/BRB-Placebo_stacked_bar.png", width = 3, height = 2)
+```
+
+# BRB volcano plot
+
+```{r}
+volplot.in <- mic_fc_BW %>%
+  ungroup() %>%
+  right_join(model_res_BW) %>%
+  mutate(tlev = str_sub(term,1,1))
+
+volplot.in %>%
+  ggplot(aes(x = l2fc, y = -log(p.value), color = tlev)) +
+  geom_point() +
+  scale_color_brewer(palette = 2, type = "qual") +
+  theme_bw()
+```
+
+# BRB modelling LDA
+
+```{r}
+model_res_BW %>%
+  filter(p.value < 0.11) %>%
+  separate(term, into = c("TaxaLevel", "term"), sep = "__") %>%
+  mutate(term = gsub("_", " ", term), 
+          term = paste0("*", term, "*"),
+         term = gsub("\\*Lachnospiraceae unclassified\\*", "Unclassified Lachnospiraceae", term),
+         term = fct_reorder(term, estimate),
+         ) %>%
+ggplot(aes(x = estimate, y = term, fill = TaxaLevel)) +
+  geom_col() +
+  labs(x = "Effect Size", y = "") +
+  scale_fill_manual(breaks = c("g", "s"), values = c("firebrick", "grey70"), name = "Taxonomic level", labels = c("Genus", "Species")) +
+  theme_bw(base_size = 10)  +
+  theme(axis.text.y = element_markdown())
+
+ggsave("../figures/effect-size_glm-binomial.png",
+       height = 3, width = 4)
+```
