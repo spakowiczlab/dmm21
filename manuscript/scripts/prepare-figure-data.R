@@ -10,6 +10,7 @@ rber.groups <- formatRBgroups()
 rber.desres <- difMicsRB(rber.seq, rber.tax, rber.groups)
 
 save(rber.desres, file = "../data/figure-data/desres_rberry.rda")
+
 #BEWELL figures
 
 bewell.tax <- read.csv("../data/BEWELL/bewell_taxonomy_relAbun.csv")
