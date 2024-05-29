@@ -22,3 +22,8 @@ save(stackdatBW, file = "../data/figure-data/stackedbar_bewell.rda")
 save(model_res_BW, mic_fc_BW, file = "../data/figure-data/model_stats_BW.rda")
 
 #mimic figures
+
+mimic.sum <- read.csv("../data/mimic/2024-02-05_tumor-size_R-formatted.csv")
+mimic10.means <- tumorVolTime(mimic.sum)
+
+save(mimic10.means, file = "../data/figure-data/tvol_m10.rda")
