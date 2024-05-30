@@ -61,7 +61,8 @@ brb.sig %>%
   theme_bw() + 
   ggtitle("Effect Size BRB vs. NMBA - Significant Taxa") +
   ylab("Microbe Classification") +
-  scale_fill_brewer(palette = "Set1") 
+  scale_fill_brewer(palette = "Set2") 
 
-ggsave("../figures/effecti-size_rberry-mics.png")
+ggsave("../figures/effecti-size_rberry-mics.svg",
+height = 3, width = 4)
 ```

@@ -16,6 +16,10 @@ library(ggtext)
 
 ```{r}
 load("../data/figure-data/tvol_m10.rda")
+load("../data/figure-data/tvol_m1819.rda")
+load("../data/figure-data/fracresponse_blautia-gavage.rda")
+load("../data/figure-data/boxdat_mimic.rda")
+load("../data/figure-data/longmods_mimic-heatmap.rda")
 ```
 
 # Tumor volume over time - mimic10
@@ -48,5 +52,106 @@ mimic10.means %>%
        y = expression("Tumor volume ("~mm^3~")"))  +
   theme_bw(base_size = 10) 
 ggsave("../figures/lineplot_tumorvol_mim10.png")
+```
+# Tumor Vol over Time - mimic1819
+
+```{r}
+mimic1819.means %>%
+  ggplot(aes(x = days.from.injection, y = mean)) +
+  geom_line(aes(group = treatment.group,
+                color = Supplement,
+                linetype = Treatment), 
+            lwd = 1) + 
+  geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) + 
+  geom_point(aes(color = Supplement))+
+  labs(x = "Days from Tumor Injection", 
+       y = expression("Mean Tumor volume ("~mm^3~")"))  +
+  theme_bw() +
+  scale_color_brewer(palette = "Set1") 
+
+ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
+       height = 5, width = 7)
+```
+
+# Fraction response - probably needs calculations checked
+
+```{r}
+mimic.respose%>%
+  mutate(gavage = gsub(" ", "", gavage)) %>%
+  ggplot(aes(x=treatment, y=frac.0)) +
+  geom_bar(stat="identity", 
+           position="dodge", 
+           aes(fill=gavage)) + 
+  labs(y="Fraction Tumor Free", x="Treatment Group") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  facet_wrap(~experiment) + 
+  theme_bw(base_size = 18)
+ggsave("../figures/Fraction-Tumor-Free.png", height= 7, width= 7)
+```
+
+# Boxplot - filtered BEWELL
+
+```{r}
+mim.boxdat$bewell.filt %>%
+  ggplot(aes(x = treatment, y = tumor.volume, fill = gavage)) +
+  geom_boxplot() +
+  facet_wrap(. ~ patient, scales = "free_y") +
+  xlab("Treatment") +
+  ylab("Tumor Volume") +
+  ggtitle("Mimic Bewell Samples Final Tumor Volume") +
+  theme_bw()
+
+ggsave("../figures/BEWELL-filtered-boxplot.png", width = 10, height = 8)
+```
+# Boxplot - anti-PD1 samples
+
+```{r}
+mim.boxdat$labelled.patients %>%
+  filter(patient != "other") %>%
+  filter(treatment == "Anti-PD1") %>%
+  ggplot(aes(x = patient, y = tumor.volume)) +
+  geom_boxplot(aes(fill = gavage)) +
+  theme_bw(base_size = 18) +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Participant Sample",
+       y = expression("Tumor volume ("~mm^3~")"),
+       fill = "Gavage")
+
+ggsave("../figures/bewell-samples_PD1-only_boxplot.png",
+       height = 5, width = 7)
+```
+
+# Boxplot - flo data
+
+```{r}
+mim.boxflow %>%
+  ggplot(aes(x = Treatment, y = Percent)) +
+  geom_boxplot(aes(fill = Gavage)) +
+  facet_wrap(~Marker) +
+  theme_bw(base_size = 18) +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1)) +
+  scale_fill_brewer(palette = "Set1")
+
+ggsave("../figures/boxplot_mimic10_flow.png",
+       height = 5, width = 5)
+```
+
+# Heatmap - longitudinal model interaction terms
+
+```{r}
+mimic.longmods %>%
+  ggplot(aes(x = `Combined ID`, y = term.adj, fill = estimate, alpha = sig.flag)) +
+  geom_tile(color = "black") +
+  scale_fill_viridis_c() +
+  coord_fixed() +
+  guides(alpha = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  labs(x = "Test Microbe (Sample ID)", y = "")
+  
+
+ggsave("../figures/bewell_heatmap_interaction.png",
+       height =  6, width = 6)
 ```
 
