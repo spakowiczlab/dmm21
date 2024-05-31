@@ -1,23 +1,14 @@
 stackedBarBEWELL <- function(exora, nphyl){
- 
-  get_phyl_ra <- function(exora){
-    exora.phyl <- exora %>%
-      group_by(sample, Phylum) %>%
-      summarise(ra = sum(RelAbun, na.rm = T)) %>%
-      as.data.frame()
-  } 
   
   taxa <- exora %>% 
     separate(Taxonomy, c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus"), "\\|")
-  
-  taxa <- taxa %>%
-    filter(!is.na(Phylum))
-  
-  exora.p <- get_phyl_ra(taxa)
+
+  exora.p <- taxa %>%
+    filter(!is.na(Phylum) & is.na(Class))
   
   large.phyls <- exora.p %>% 
     group_by(Phylum) %>%
-    summarize(median.ra = median(ra)) %>%
+    summarize(median.ra = median(RelAbun)) %>%
     arrange(desc(median.ra)) %>%
     mutate(x = row_number()) %>%
     dplyr::filter(x <= nphyl)
@@ -25,11 +16,11 @@ stackedBarBEWELL <- function(exora, nphyl){
   
   tmp <- exora.p %>% 
     filter(Phylum == large.phyls[1]) %>%
-    arrange(desc(ra))
+    arrange(desc(RelAbun))
   sampord.orter <- tmp$sample
   
-  vars <- df %>% 
-    select(sample, variable) %>% 
+  vars <- bewell.tax %>% 
+    dplyr::select(sample, variable) %>% 
     distinct()
   
   exora.p.hist <- vars %>%

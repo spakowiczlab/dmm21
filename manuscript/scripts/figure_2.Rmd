@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(ggforce)
 library(ggtext)
 ```
 
@@ -43,7 +44,7 @@ ggsave("../figures/circle_phylo_all-highlight-lach.svg")
 
 ```{r}
 stackdatBW %>% 
-  ggplot(aes(x = sample, y = ra, fill = Phylum)) +
+  ggplot(aes(x = sample, y = RelAbun, fill = Phylum)) +
   facet_row(vars(timepoint), scales = "free_x", space = "free") +
   geom_bar(position="fill", stat = "identity") +
   labs(x = "", y = "") +
