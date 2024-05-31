@@ -17,6 +17,26 @@ library(ggtext)
 ```{r}
 load("../data/figure-data/stackedbar_bewell.rda")
 load("../data/figure-data/model_stats_BW.rda")
+load("../data/figure-data/phylo_lacho-bewell.rda")
+```
+
+# Phylogeny
+
+```{r}
+ggplot(lachno.phylo$Segments) +
+  geom_segment(aes(y = v0x, x = v0y, yend = v1x, xend = v1y)) +
+  geom_point(data = lachno.phylo$Nodes, aes(x = yy, y = xx, color = Lachno), show.legend = F) +
+  coord_polar() +
+  # scale_color_viridis_c(option = "A", name = "log2FoldChange") +
+  lims(x = c(0,1.025)) +
+  labs(x = "", y = "") +
+  scale_color_manual(values = "darkred") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+
+ggsave("../figures/circle_phylo_all-highlight-lach.svg")
 ```
 
 # Stacked bar
@@ -72,4 +92,39 @@ ggplot(aes(x = estimate, y = term, fill = TaxaLevel)) +
 
 ggsave("../figures/effect-size_glm-binomial.png",
        height = 3, width = 4)
+```
+
+# Phylo tree
+
+```{r}
+ggplot(lachno.phylo$Segments) +
+  geom_segment(aes(y = v0x, x = v0y, yend = v1x, xend = v1y)) +
+  geom_point(data = lachno.phylo$Nodes, aes(x = yy, y = xx, color = Lachno), show.legend = F) +
+  coord_polar() +
+  # scale_color_viridis_c(option = "A", name = "log2FoldChange") +
+  lims(x = c(0,1.025)) +
+  labs(x = "", y = "") +
+  scale_color_manual(values = "darkred") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+ggsave("../figures/circle_phylo_all-highlight-lach.svg")
+```
+
+```{r bootstrap pval for all sig being lachno}
+sample.vec <- ifelse(allspecs.remtax %in% lachno.remtax, "Lachno", "Not Lachno")
+
+set.seed(112358)
+sample.seeds <- runif(10000, 1e4, 1e5)
+
+lachno.draws <-vector()
+for(i in sample.seeds){
+  set.seed((i))
+  pullspecs <- sample(sample.vec, 2, replace = F)
+  res <- all(pullspecs == "Lachno")
+  lachno.draws <- append(lachno.draws, res)
+}
+
+sum(lachno.draws)/length(lachno.draws)
 ```

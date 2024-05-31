@@ -10,15 +10,30 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(ggtext)
+library(ggfortify)
+library(FactoMineR)
 ```
 
 # Load data
 
 ```{r}
 load("../data/figure-data/desres_rberry.rda")
+load("../data/figure-data/pca_rberry.rda")
 ```
 
 # PCA
+
+```{r}
+PCA_label_plot <- 
+  autoplot(rber.pca$PCA, data = rber.pca$GroupLabs, colour = "GroupID", label = FALSE, label.size = 3, shape = TRUE, frame = TRUE, frame.type = "convex") +
+  theme_bw() +
+  scale_colour_manual(values = c("purple", "blue")) +
+  theme(axis.text = element_text(size = 10)) +
+  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-1, 1))
+
+print(PCA_label_plot)
+ggsave(plot = PCA_label_plot, "../figures/pca_rberry.png")
+```
 
 # Volcano
 

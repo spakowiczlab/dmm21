@@ -15,11 +15,44 @@ library(ggtext)
 # Load data
 
 ```{r}
+load("../data/figure-data/bardat_Bo_BW.rda")
 load("../data/figure-data/tvol_m10.rda")
 load("../data/figure-data/tvol_m1819.rda")
 load("../data/figure-data/fracresponse_blautia-gavage.rda")
 load("../data/figure-data/boxdat_mimic.rda")
 load("../data/figure-data/longmods_mimic-heatmap.rda")
+load("../data/figure-data/bardat_mimic_roseburia.rda")
+```
+
+# Barplot Blautia in samples
+
+```{r}
+Bo_abun_BW %>%
+  ggplot(aes(x = timepoint, y = RelAbun)) +
+  geom_bar(stat = "identity", aes(fill = timepoint), show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance",
+       subtitle = "Blautia obeum") +
+  facet_wrap(~Subject.Number, ncol = 1)
+
+ggsave("../figures/Blautia_obeum_abundance_bar_all.png",
+       height = 7.5, width = 10)
+```
+
+# Bardat Roseburia in mimic 10 
+
+```{r}
+mim.rosebur %>%
+  ggplot(aes(x=gavage.simple,y=genus_abundance,fill=treatment)) +
+  geom_bar(position="dodge", stat="identity") +
+  facet_wrap(. ~ timepoint) +
+  labs(x = "Gavage",y = "Relative Abundance",title = "Roseburia - Mimic 10") +
+  scale_fill_brewer(palette = "Set1") +
+  theme_bw()  
+
+ggsave("../figures/mimic10-roseburia_relabun.png", width = 7, height = 6)
 ```
 
 # Tumor volume over time - mimic10
