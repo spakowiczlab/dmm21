@@ -12,6 +12,7 @@ library(tidyverse)
 library(ggtext)
 library(ggfortify)
 library(FactoMineR)
+library(ggrepel)
 ```
 
 # Load data
@@ -26,38 +27,68 @@ load("../data/figure-data/pca_rberry.rda")
 ```{r}
 PCA_label_plot <- 
   autoplot(rber.pca$PCA, data = rber.pca$GroupLabs, colour = "GroupID", label = FALSE, label.size = 3, shape = TRUE, frame = TRUE, frame.type = "convex") +
-  theme_bw() +
-  scale_colour_manual(values = c("purple", "blue")) +
-  theme(axis.text = element_text(size = 10)) +
-  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-1, 1))
+  theme_bw(base_size = 8.8) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  theme(
+  axis.text = element_text(size = 7),
+  legend.text = element_text(size = 8.8), 
+  legend.title = element_blank(), 
+  legend.key.size = unit(0.75, "lines")
+  ) +
+  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-0.5, 1))
 
 print(PCA_label_plot)
 ggsave(plot = PCA_label_plot, "../figures/pca_rberry.png")
+ggsave("../figures/Fig1B.svg", height= 1.75, width= 3.1)
+
 ```
 
 # Volcano
 
 ```{r}
+
 rber.desres %>%
   mutate(Tax.Sig=ifelse(padj < .05,TaxLev, NA),
-        class.dum = ifelse(padj < 0.05, Taxa, NA)) %>%
+        class.dum = ifelse(padj < 0.05, Taxa, NA),
+        class.smart = if_else(grepl("g_uncl|sensu", class.dum),
+                           true = NA,
+                           false = class.dum),
+        class.smart = str_replace(class.smart, 
+                                  pattern = "_",
+                                  replacement = " ")) %>%
   ggplot(aes(x=log2FoldChange,
              y=-log(padj),
              color=Tax.Sig,
-             label=class.dum)) + 
+             label = class.smart)) + 
   geom_point() + 
   geom_hline(yintercept = -log(0.05),
-             color="red") + 
-  geom_vline(xintercept = c(-4,4),color="red") + 
-  guides(color=guide_legend("Tax")) + 
-  geom_text_repel( show.legend = FALSE) + 
-  ggtitle("Black Raspberry vs. NMBA Control") + 
-  theme_bw() + 
-  scale_color_brewer(palette="Set1",
+             color="red",
+              linetype = "dotted",
+             linewidth = 0.75) +   
+  geom_vline(xintercept = c(-4,4),
+             color="red",
+              linetype = "dotted",
+             linewidth = 0.75) + 
+  guides(color=guide_legend("Taxonomic\nRank")) + 
+  geom_text_repel(show.legend = FALSE) + 
+  theme_bw(base_size = 9) + 
+  scale_color_brewer(palette="Dark2",
                      na.value="gray50",
-                     breaks=c("Phylum","Class","Order","Family","Genus")) 
+                     breaks=c("Phylum","Class","Order","Family","Genus")) +
+  theme(legend.position = c(0.95, 0.05),
+        legend.justification = c("right", "bottom"),
+        legend.box.just = "right",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2))
+
 
 ggsave("../figures/volcano_rberry-mics.png")
+ggsave("../figures/Figure1C_rberry_volcano.svg",
+       height = 4,
+       width = 3.2)
+
 ```
 
 # LDA
@@ -81,3 +112,13 @@ brb.sig %>%
 ggsave("../figures/effecti-size_rberry-mics.svg",
 height = 3, width = 4)
 ```
+
+
+
+
+
+
+
+
+
+

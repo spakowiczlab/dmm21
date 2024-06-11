@@ -39,6 +39,9 @@ Bo_abun_BW %>%
 
 ggsave("../figures/Blautia_obeum_abundance_bar_all.png",
        height = 7.5, width = 10)
+
+ggsave("../figures/Fig3A.svg",
+       height = 7.5, width = 10)
 ```
 
 # Bardat Roseburia in mimic 10 
@@ -85,6 +88,8 @@ mimic10.means %>%
        y = expression("Tumor volume ("~mm^3~")"))  +
   theme_bw(base_size = 10) 
 ggsave("../figures/lineplot_tumorvol_mim10.png")
+ggsave("../figures/Fig3C.svg")
+
 ```
 # Tumor Vol over Time - mimic1819
 
@@ -104,6 +109,9 @@ mimic1819.means %>%
 
 ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
        height = 5, width = 7)
+ggsave("../figures/Fig3E.svg", 
+       height = 5, width = 7)
+
 ```
 
 # Fraction response - probably needs calculations checked
@@ -135,6 +143,8 @@ mim.boxdat$bewell.filt %>%
   theme_bw()
 
 ggsave("../figures/BEWELL-filtered-boxplot.png", width = 10, height = 8)
+ggsave("../figures/Fig3E.svg", width = 10, height = 8)
+
 ```
 # Boxplot - anti-PD1 samples
 
@@ -152,6 +162,8 @@ mim.boxdat$labelled.patients %>%
 
 ggsave("../figures/bewell-samples_PD1-only_boxplot.png",
        height = 5, width = 7)
+ggsave("../figures/Fig3H.svg",
+       height = 5, width = 7)
 ```
 
 # Boxplot - flo data
@@ -168,6 +180,10 @@ mim.boxflow %>%
 
 ggsave("../figures/boxplot_mimic10_flow.png",
        height = 5, width = 5)
+
+ggsave("../figures/Fig3I.svg",
+       height = 5, width = 5)
+
 ```
 
 # Heatmap - longitudinal model interaction terms
@@ -186,5 +202,7 @@ mimic.longmods %>%
 
 ggsave("../figures/bewell_heatmap_interaction.png",
        height =  6, width = 6)
+ggsave("../figures/Fig3D.svg",
+       height =  3, width = 6)
 ```
 
