@@ -70,4 +70,6 @@ preparePhyloDat <- function(metout, modres, sigcut){
   
   outs <- list(phylo.coords$Segments, nodes.forjoin)
   names(outs) <- c("Segments", "Nodes")
+  
+  return(outs)
 }

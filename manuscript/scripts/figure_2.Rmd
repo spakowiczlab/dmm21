@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(ggrepel)
 library(ggforce)
 library(ggtext)
 ```
@@ -64,13 +65,21 @@ ggsave(file = "../figures/BRB-Placebo_stacked_bar.png", width = 3, height = 2)
 volplot.in <- mic_fc_BW %>%
   ungroup() %>%
   right_join(model_res_BW) %>%
-  mutate(tlev = str_sub(term,1,1))
+  mutate(tlev = str_sub(term,1,1),
+         tlab = ifelse(p.value < 0.05, gsub("_", " ", gsub("\\w__", "", term)), NA))
 
 volplot.in %>%
-  ggplot(aes(x = l2fc, y = -log(p.value), color = tlev)) +
-  geom_point() +
-  scale_color_brewer(palette = 2, type = "qual") +
+  ggplot(aes(x = l2fc, y = -log(p.value), color = tlev, label = tlab)) +
+  geom_point() + 
+  geom_text_repel(show.legend = F) +
+  scale_color_brewer(palette = 2, type = "qual",
+                     breaks = c("k", "p", "c", "o", "f", "g", "s"),
+                     labels = c("Kingdon", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+                     name = "") +
+  labs(x = "Log2FoldChange") +
   theme_bw()
+
+ggsave("../figures/volcano_bewell-mixed-effects.svg")
 ```
 
 # BRB modelling LDA

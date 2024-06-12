@@ -1,21 +1,24 @@
 modelBW <- function(relabun){
-  capture.models.univ <- function(outcome, lfun, mics, modin){
-    mods.list <- lapply(mics, function(x)  try({glm(as.formula(paste0(outcome, " ~ ", x)), family = lfun, data = modin) %>% tidy()}))
-    #glm: generalized linear model
-    #modin: model input                    
+  capture.models.univ <- function(outcome, mics, modin){
+    mods.list <- lapply(mics, function(x) 
+      try({
+        lmer(as.formula(paste0(outcome, " ~ ", x, "+ (1|patient)")), data = modin) %>% 
+          tidy() %>%
+          filter(term == x)
+        })
+      )
     mods.list.clean <- list.clean(mods.list, function(x) is.null(x))
     mods.df <- bind_rows(mods.list.clean)
     return(mods.df)
   }
-  #list.clean: removes all elements that are TRUE
-  #is.null function: to remove missing values
+
   
   format_and_model <- function(tmp){
     tmp.mics <- colnames(tmp)[-1]
     tmp.form <- tmp %>%
-      mutate(berry.group = ifelse(grepl("tB",sample), 1, 0)) #ifelse: TRUE if 1, FLASE if 0
-    #grepl: check somethign by comparing it across a pattern (pattern, vaeiable)
-    res <- capture.models.univ("berry.group", "binomial", tmp.mics, tmp.form) %>%
+      mutate(berry.group = ifelse(grepl("tB",sample), 1, 0),
+             patient = gsub("_.*", "", sample))
+    res <- capture.models.univ("berry.group", tmp.mics, tmp.form) %>%
       filter(term !="(Intercept)")
     return(res)
   }
