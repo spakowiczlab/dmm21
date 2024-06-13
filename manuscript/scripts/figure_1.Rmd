@@ -39,7 +39,9 @@ PCA_label_plot <-
   coord_cartesian(xlim = c(-1, 0.5), ylim = c(-0.5, 1))
 
 print(PCA_label_plot)
+
 ggsave(plot = PCA_label_plot, "../figures/pca_rberry.png")
+
 ggsave("../figures/Fig1B.svg", height= 1.75, width= 3.1)
 
 ```
@@ -47,7 +49,6 @@ ggsave("../figures/Fig1B.svg", height= 1.75, width= 3.1)
 # Volcano
 
 ```{r}
-
 rber.desres %>%
   mutate(Tax.Sig=ifelse(padj < .05,TaxLev, NA),
         class.dum = ifelse(padj < 0.05, Taxa, NA),
@@ -71,8 +72,8 @@ rber.desres %>%
               linetype = "dotted",
              linewidth = 0.75) + 
   guides(color=guide_legend("Taxonomic\nRank")) + 
-  geom_text_repel(show.legend = FALSE) + 
-  theme_bw(base_size = 9) + 
+  geom_text_repel(show.legend = FALSE, size = 6.25) + 
+  theme_bw(base_size = 20) + 
   scale_color_brewer(palette="Dark2",
                      na.value="gray50",
                      breaks=c("Phylum","Class","Order","Family","Genus")) +
@@ -81,14 +82,14 @@ rber.desres %>%
         legend.box.just = "right",
         legend.margin = margin(3, 3, 3, 3),
         legend.box.background = element_rect(color = "black", linewidth = 0.25),
-        legend.box.margin = margin(2, 2, 2, 2))
+        legend.box.margin = margin(2, 2, 2, 2),
+        legend.text = element_text(size = 16),  
+        legend.title = element_text(size = 18, hjust = 0.5)) +
+   xlim(-8, 8)
 
-
-ggsave("../figures/volcano_rberry-mics.png")
-ggsave("../figures/Figure1C_rberry_volcano.svg",
-       height = 4,
-       width = 3.2)
-
+ggsave("../figures/Fig1C.volcano.svg",
+       height = 5,
+       width = 7)
 ```
 
 # LDA
