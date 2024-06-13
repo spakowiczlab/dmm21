@@ -100,18 +100,25 @@ brb.sig <-
   filter(padj < .05) 
 
 
-brb.sig %>%
+brb.sig %>% 
+  mutate(Taxa = gsub("_", " ", gsub("g_", "", Taxa))) %>%
   ggplot(aes(x=log2FoldChange,
              y=reorder(Taxa,log2FoldChange),
              fill=TaxLev)) + 
   geom_bar(stat = "identity") + 
-  theme_bw() + 
-  ggtitle("Effect Size BRB vs. NMBA - Significant Taxa") +
-  ylab("Microbe Classification") +
-  scale_fill_brewer(palette = "Set2") 
+  theme_bw(base_size = 18) + 
+  ggtitle("") +
+  ylab("") +
+  scale_fill_brewer(palette = "Dark2",
+                    breaks=c("Phylum","Class","Order","Family","Genus")) +
+  labs(fill = "Taxonomic\nRank") +
+  theme(legend.title = element_text(size = 18, hjust = 0.5)) +
+    scale_y_discrete(expand = expansion(add = c(0.75, 0.75)))  
 
-ggsave("../figures/effecti-size_rberry-mics.svg",
-height = 3, width = 4)
+
+ggsave("../figures/Fig1D.effecti-size_rberry-mics.svg",
+       height = 5,
+       width = 7)
 ```
 
 
