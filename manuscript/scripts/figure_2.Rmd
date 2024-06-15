@@ -57,6 +57,28 @@ stackdatBW %>%
         panel.grid.major = element_blank()) 
 
 ggsave(file = "../figures/BRB-Placebo_stacked_bar.png", width = 3, height = 2)
+
+```
+```{r}
+stackdatBW %>% 
+  mutate(timepoint = str_replace(timepoint,
+                                 pattern = "-",
+                                 replacement = " ")) %>%
+  mutate(timepoint = factor(timepoint, levels = c("Pre Placebo", "Post Placebo", "Pre BRB", "Post BRB"))) %>% 
+  ggplot(aes(x = sample, y = RelAbun, fill = Phylum)) +
+  facet_row(vars(timepoint), scales = "free_x", space = "free", strip.position = "bottom") +
+  geom_bar(position="fill", stat = "identity") +
+  labs(x = "", y = "") +
+  scale_fill_viridis_d(option = "plasma") +
+  theme_minimal(base_size = 9) +
+  theme(axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid.major = element_blank(),
+        strip.text.x = element_text(size = 19), 
+        legend.text = element_text(size = 20), 
+        legend.title = element_text(size = 24))
+ggsave(file = "../figures/Fig2B-BRB-Placebo_stacked_bar.svg", width = 10, height = 4)
 ```
 
 # BRB volcano plot
