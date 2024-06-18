@@ -103,6 +103,37 @@ volplot.in %>%
 
 ggsave("../figures/volcano_bewell-mixed-effects.svg")
 ```
+```{r}
+volplot.in <- mic_fc_BW %>%
+  ungroup() %>%
+  right_join(model_res_BW) %>%
+  mutate(tlev = str_sub(term,1,1),
+         tlab = ifelse(p.value < 0.05, gsub("_", " ", gsub("\\w__", "", term)), NA))
+
+volplot.in %>%
+  ggplot(aes(x = l2fc, y = -log(p.value), color = tlev, label = tlab)) +
+  geom_point() + 
+  geom_text_repel(show.legend = F,nudge_x = -0.6, size = 6.75) +
+  scale_color_brewer(palette = "Dark2", type = "qual",
+                     breaks = c("k", "p", "c", "o", "f", "g", "s"),
+                     labels = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+                     name = "Taxonomic\nRank") +
+  labs(x = "Log2FoldChange") +
+  theme_bw(base_size = 18) +
+  theme(legend.position = c(0.97, 0.05),
+        legend.justification = c("right", "bottom"),
+        legend.box.just = "right",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2),
+    legend.text = element_text(size = 16),  
+    legend.title = element_text(size = 18, hjust = 0.5))
+
+ggsave("../figures/volcano_bewell-mixed-effects.svg",
+       height = 5,
+       width = 7)
+
+```
 
 # BRB modelling LDA
 
@@ -118,11 +149,14 @@ model_res_BW %>%
 ggplot(aes(x = estimate, y = term, fill = TaxaLevel)) +
   geom_col() +
   labs(x = "Effect Size", y = "") +
-  scale_fill_manual(breaks = c("g", "s"), values = c("firebrick", "grey70"), name = "Taxonomic level", labels = c("Genus", "Species")) +
+  scale_fill_brewer(palette="Dark2", breaks = c("g", "s"), name = "Taxonomic\nRank", labels = c("Genus", "Species")) +
   theme_bw(base_size = 10)  +
-  theme(axis.text.y = element_markdown())
+  theme(axis.text.y = element_markdown(),
+        legend.title = element_text(hjust = 0.5))
 
 ggsave("../figures/effect-size_glm-binomial.png",
+       height = 3, width = 4)
+ggsave("../figures/effect-size_glm-binomial.svg",
        height = 3, width = 4)
 ```
 
