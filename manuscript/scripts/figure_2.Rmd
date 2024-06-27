@@ -22,43 +22,10 @@ load("../data/figure-data/model_stats_BW.rda")
 load("../data/figure-data/phylo_lacho-bewell.rda")
 ```
 
-# Phylogeny
 
-```{r}
-ggplot(lachno.phylo$Segments) +
-  geom_segment(aes(y = v0x, x = v0y, yend = v1x, xend = v1y)) +
-  geom_point(data = lachno.phylo$Nodes, aes(x = yy, y = xx, color = Lachno), show.legend = F) +
-  coord_polar() +
-  # scale_color_viridis_c(option = "A", name = "log2FoldChange") +
-  lims(x = c(0,1.025)) +
-  labs(x = "", y = "") +
-  scale_color_manual(values = "darkred") +
-  theme_minimal() +
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        panel.grid = element_blank())
-
-ggsave("../figures/circle_phylo_all-highlight-lach.svg")
-```
 
 # Stacked bar
 
-```{r}
-stackdatBW %>% 
-  ggplot(aes(x = sample, y = RelAbun, fill = Phylum)) +
-  facet_row(vars(timepoint), scales = "free_x", space = "free") +
-  geom_bar(position="fill", stat = "identity") +
-  labs(x = "", y = "") +
-  scale_fill_manual(values = c("darkslateblue", "darkgoldenrod2","cornflowerblue", "darkgreen", "darkorange4","salmon2", "cornflowerblue", "deeppink4" ,"cyan4", "salmon2"), name = "Taxa") +
-  theme_minimal(base_size = 10) +
-  theme(axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank(),
-        axis.text.y = element_blank(),
-        panel.grid.major = element_blank()) 
-
-ggsave(file = "../figures/BRB-Placebo_stacked_bar.png", width = 3, height = 2)
-
-```
 ```{r}
 stackdatBW %>% 
   mutate(timepoint = str_replace(timepoint,
@@ -139,7 +106,8 @@ ggsave("../figures/volcano_bewell-mixed-effects.svg",
 
 ```{r}
 model_res_BW %>%
-  filter(p.value < 0.11) %>%
+  mutate(padj = p.adjust(p.value, method = "fdr")) %>%
+  filter(p.value < 0.08) %>%
   separate(term, into = c("TaxaLevel", "term"), sep = "__") %>%
   mutate(term = gsub("_", " ", term), 
           term = paste0("*", term, "*"),
@@ -149,7 +117,7 @@ model_res_BW %>%
 ggplot(aes(x = estimate, y = term, fill = TaxaLevel)) +
   geom_col() +
   labs(x = "Effect Size", y = "") +
-  scale_fill_brewer(palette="Dark2", breaks = c("g", "s"), name = "Taxonomic\nRank", labels = c("Genus", "Species")) +
+  scale_fill_brewer(palette="Dark2", breaks = c("f","g", "s"), name = "Taxonomic\nRank", labels = c("Family", "Genus", "Species")) +
   theme_bw(base_size = 10)  +
   theme(axis.text.y = element_markdown(),
         legend.title = element_text(hjust = 0.5))
@@ -161,6 +129,25 @@ ggsave("../figures/effect-size_glm-binomial.svg",
 ```
 
 # Phylo tree
+
+# Phylogeny
+
+```{r}
+ggplot(lachno.phylo$Segments) +
+  geom_segment(aes(y = v0x, x = v0y, yend = v1x, xend = v1y)) +
+  geom_point(data = lachno.phylo$Nodes, aes(x = yy, y = xx, color = Lachno), show.legend = F) +
+  coord_polar() +
+  # scale_color_viridis_c(option = "A", name = "log2FoldChange") +
+  lims(x = c(0,1.025)) +
+  labs(x = "", y = "") +
+  scale_color_manual(values = "darkred") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+
+ggsave("../figures/circle_phylo_all-highlight-lach.svg")
+```
 
 ```{r}
 ggplot(lachno.phylo$Segments) +
