@@ -281,13 +281,13 @@
 <line x1='51.34' y1='109.62' x2='494.04' y2='109.62' style='stroke-width: 1.60; stroke: #FF0000; stroke-dasharray: 2.13,6.40; stroke-linecap: butt;' />
 <line x1='172.08' y1='302.73' x2='172.08' y2='9.96' style='stroke-width: 1.60; stroke: #FF0000; stroke-dasharray: 2.13,6.40; stroke-linecap: butt;' />
 <line x1='373.30' y1='302.73' x2='373.30' y2='9.96' style='stroke-width: 1.60; stroke: #FF0000; stroke-dasharray: 2.13,6.40; stroke-linecap: butt;' />
-<text x='321.82' y='26.30' text-anchor='middle' style='font-size: 17.78px;fill: #66A61E; font-family: "Arial";' textLength='128.52px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobia</text>
-<text x='378.63' y='80.62' text-anchor='middle' style='font-size: 17.78px;fill: #1B9E77; font-family: "Arial";' textLength='138.41px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobiae</text>
+<text x='321.81' y='26.30' text-anchor='middle' style='font-size: 17.78px;fill: #66A61E; font-family: "Arial";' textLength='128.52px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobia</text>
+<text x='378.68' y='80.59' text-anchor='middle' style='font-size: 17.78px;fill: #1B9E77; font-family: "Arial";' textLength='138.41px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobiae</text>
 <text x='176.58' y='60.18' text-anchor='middle' style='font-size: 17.78px;fill: #E7298A; font-family: "Arial";' textLength='152.27px' lengthAdjust='spacingAndGlyphs'>Anaeroplasmatales</text>
-<text x='412.30' y='49.27' text-anchor='middle' style='font-size: 17.78px;fill: #E7298A; font-family: "Arial";' textLength='151.26px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobiales</text>
-<text x='311.01' y='100.58' text-anchor='middle' style='font-size: 17.78px;fill: #D95F02; font-family: "Arial";' textLength='167.09px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobiaceae</text>
-<text x='422.24' y='125.74' text-anchor='middle' style='font-size: 17.78px;fill: #7570B3; font-family: "Arial";' textLength='102.80px' lengthAdjust='spacingAndGlyphs'>Akkermansia</text>
-<text x='135.40' y='125.77' text-anchor='middle' style='font-size: 17.78px;fill: #7570B3; font-family: "Arial";' textLength='155.19px' lengthAdjust='spacingAndGlyphs'>Ruminiclostridium 5</text>
+<text x='412.23' y='49.31' text-anchor='middle' style='font-size: 17.78px;fill: #E7298A; font-family: "Arial";' textLength='151.26px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobiales</text>
+<text x='311.03' y='100.58' text-anchor='middle' style='font-size: 17.78px;fill: #D95F02; font-family: "Arial";' textLength='167.09px' lengthAdjust='spacingAndGlyphs'>Verrucomicrobiaceae</text>
+<text x='422.25' y='125.75' text-anchor='middle' style='font-size: 17.78px;fill: #7570B3; font-family: "Arial";' textLength='102.80px' lengthAdjust='spacingAndGlyphs'>Akkermansia</text>
+<text x='135.33' y='103.96' text-anchor='middle' style='font-size: 17.78px;fill: #7570B3; font-family: "Arial";' textLength='155.19px' lengthAdjust='spacingAndGlyphs'>Ruminiclostridium 5</text>
 <rect x='51.34' y='9.96' width='442.70' height='292.77' style='stroke-width: 1.94; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>

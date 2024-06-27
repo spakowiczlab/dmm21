@@ -77,21 +77,21 @@ rber.desres %>%
   scale_color_brewer(palette="Dark2",
                      na.value="gray50",
                      breaks=c("Phylum","Class","Order","Family","Genus")) +
-  theme(legend.position = c(0.95, 0.05),
+  theme(legend.position = c(0.97, 0.05),
         legend.justification = c("right", "bottom"),
         legend.box.just = "right",
         legend.margin = margin(3, 3, 3, 3),
         legend.box.background = element_rect(color = "black", linewidth = 0.25),
         legend.box.margin = margin(2, 2, 2, 2),
         legend.text = element_text(size = 16),  
-        legend.title = element_text(size = 18, hjust = 0.5)) +
+        legend.title = element_text(size = 18, hjust = 0.5) ,
+        legend.key.width = unit(0.1, "cm")) +
    xlim(-8, 8)
 
 ggsave("../figures/Fig1C.volcano.svg",
        height = 5,
        width = 7)
 ```
-
 # LDA
 
 ```{r}
@@ -112,8 +112,16 @@ brb.sig %>%
   scale_fill_brewer(palette = "Dark2",
                     breaks=c("Phylum","Class","Order","Family","Genus")) +
   labs(fill = "Taxonomic\nRank") +
-  theme(legend.title = element_text(size = 18, hjust = 0.5)) +
-    scale_y_discrete(expand = expansion(add = c(0.75, 0.75)))  
+  theme(legend.title = element_text(size = 18, hjust = 0.5),
+        legend.position = c(0.05, 0.95), 
+        legend.justification = c("left", "top"),
+        legend.box.just = "left",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2),
+        legend.text = element_text(size = 16),
+        legend.key.width = unit(0.6, "cm")) +
+  scale_y_discrete(expand = expansion(add = c(0.75, 0.75)))  
 
 
 ggsave("../figures/Fig1D.effecti-size_rberry-mics.svg",
