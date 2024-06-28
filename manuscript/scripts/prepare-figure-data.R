@@ -8,10 +8,11 @@ rber.tax <- readRDS("../data/rberry/2020-12-18_taxf.RDS")
 rber.groups <- formatRBgroups()
 
 rber.pca <- seqToPCAplot(rber.seq, rber.groups)
-
+rber.dist <- distanceCalc(rber.seq, rber.groups)
 rber.desres <- difMicsRB(rber.seq, rber.tax, rber.groups)
 
 save(rber.pca, file = "../data/figure-data/pca_rberry.rda")
+save(rber.dist, file = "../data/figure-data/dist_rberry.rda")
 save(rber.desres, file = "../data/figure-data/desres_rberry.rda")
 
 #BEWELL figures

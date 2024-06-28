@@ -13,6 +13,7 @@ library(ggtext)
 library(ggfortify)
 library(FactoMineR)
 library(ggrepel)
+library(ggpubr)
 ```
 
 # Load data
@@ -20,6 +21,7 @@ library(ggrepel)
 ```{r}
 load("../data/figure-data/desres_rberry.rda")
 load("../data/figure-data/pca_rberry.rda")
+load("../data/figure-data/dist_rberry.rda")
 ```
 
 # PCA
@@ -43,8 +45,25 @@ print(PCA_label_plot)
 ggsave(plot = PCA_label_plot, "../figures/pca_rberry.png")
 
 ggsave("../figures/Fig1B.svg", height= 1.75, width= 3.1)
-
 ```
+
+## Distance to centroid boxplot
+```{r}
+p <- rber_dist %>%
+  ggplot(aes(x = GroupID, y = Distance, fill = GroupID)) +
+  geom_boxplot() +
+  theme_bw() +
+  scale_fill_viridis_d(alpha = 0.5) +
+  theme(axis.text = element_text(size = 7), 
+        legend.position = "none")
+
+p = p + stat_compare_means(method = "t.test")
+
+ggsave(plot = p, "../figures/dist_rberry.png")
+
+ggsave("../figures/Fig1B_dist.svg", height= 1.75, width= 3.1)
+```
+
 
 # Volcano
 

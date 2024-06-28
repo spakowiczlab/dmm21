@@ -5,6 +5,8 @@ library(lme4)
 library(lmerTest)
 library(broom)
 library(broom.mixed)
+library(vegan)
+library(readxl)
 
 library(taxize)
 library(phytools)
