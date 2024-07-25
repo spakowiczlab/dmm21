@@ -36,15 +36,18 @@ PCA_label_plot <-
   axis.text = element_text(size = 7),
   legend.text = element_text(size = 8.8), 
   legend.title = element_blank(), 
-  legend.key.size = unit(0.75, "lines")
+  legend.key.size = unit(0.75, "lines"),
+  legend.position = "top"
   ) +
-  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-0.5, 1))
+  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-0.5, 1)) +
+  annotate("text", x = -0.75, y=1, label = paste0("p-value = ", rber_dist$adonis.p.val[1]))
 
 print(PCA_label_plot)
 
-ggsave(plot = PCA_label_plot, "../figures/pca_rberry.png")
+ggsave(plot = PCA_label_plot, "../figures/pca_rberry.png", height = 2.5, width = 2)
 
-ggsave("../figures/Fig1B.svg", height= 1.75, width= 3.1)
+ggsave("../figures/Fig1B-pca.svg", height= 2.5, width= 2)
+ggsave("../figures/Fig1B-pca-wide.svg", height= 2.5, width= 4)
 ```
 
 ## Distance to centroid boxplot
@@ -59,9 +62,9 @@ p <- rber_dist %>%
 
 p = p + stat_compare_means(method = "t.test")
 
-ggsave(plot = p, "../figures/dist_rberry.png")
+ggsave(plot = p, "../figures/dist_rberry.png", height = 2.5, width =2)
 
-ggsave("../figures/Fig1B_dist.svg", height= 1.75, width= 3.1)
+ggsave("../figures/Fig1B_dist.svg", height= 2.2, width= 2)
 ```
 
 
