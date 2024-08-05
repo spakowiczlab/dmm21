@@ -1,3 +1,4 @@
+# set working directory to source file location 
 ascripts <- list.files("analysis-scripts", full.names = T)
 lapply(ascripts, source)
 
@@ -28,13 +29,15 @@ mic_fc_BW <- foldchangeBW(bewell.tax)
 Bo_abun_BW <- barMicAbun(bewell.tax)
 
 lachno.phylo <- preparePhyloDat(bewell.tax, model_res_BW, 0.05)
-bewellsig.pca <- respondersigPrepScatter(respondersig, respondersig.response)
+bewellsig.pca <- respondersigPCA(respondersig, respondersig.response)
+bewellsig.dist <- respondersigDist(respondersig, respondersig.response)
 
 save(stackdatBW, file = "../data/figure-data/stackedbar_bewell.rda")
 save(model_res_BW, mic_fc_BW, file = "../data/figure-data/model_stats_BW.rda")
 save(Bo_abun_BW, file = "../data/figure-data/bardat_Bo_BW.rda")
 save(lachno.phylo, file = "../data/figure-data/phylo_lacho-bewell.rda")
 save(bewellsig.pca, file = "../data/figure-data/bewell-respondersig-pca.rda")
+save(bewellsig.dist, file = "../data/figure-data/bewell-respondersig-dist.rda")
 
 #mimic figures
 
