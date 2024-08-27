@@ -459,11 +459,12 @@
 <circle cx='200.81' cy='273.11' r='1.95' style='stroke-width: 0.71; stroke: #A6761D; fill: #A6761D;' />
 <circle cx='170.10' cy='267.63' r='1.95' style='stroke-width: 0.71; stroke: #A6761D; fill: #A6761D;' />
 <circle cx='215.95' cy='285.96' r='1.95' style='stroke-width: 0.71; stroke: #A6761D; fill: #A6761D;' />
-<text x='276.52' y='141.14' text-anchor='middle' style='font-size: 19.21px;fill: #D95F02; font-family: "Arial";' textLength='143.06px' lengthAdjust='spacingAndGlyphs'>Lactobacillaceae</text>
-<text x='207.85' y='89.25' text-anchor='middle' style='font-size: 19.21px;fill: #7570B3; font-family: "Arial";' textLength='251.94px' lengthAdjust='spacingAndGlyphs'>Lachnospiraceae unclassified</text>
-<text x='313.53' y='118.30' text-anchor='middle' style='font-size: 19.21px;fill: #7570B3; font-family: "Arial";' textLength='111.02px' lengthAdjust='spacingAndGlyphs'>Lactobacillus</text>
+<line x1='237.70' y1='101.37' x2='253.91' y2='94.27' style='stroke-width: 1.07; stroke: #A6761D;' />
+<text x='314.41' y='118.31' text-anchor='middle' style='font-size: 19.21px;fill: #D95F02; font-family: "Arial";' textLength='143.06px' lengthAdjust='spacingAndGlyphs'>Lactobacillaceae</text>
+<text x='210.37' y='89.24' text-anchor='middle' style='font-size: 19.21px;fill: #7570B3; font-family: "Arial";' textLength='251.94px' lengthAdjust='spacingAndGlyphs'>Lachnospiraceae unclassified</text>
+<text x='277.70' y='141.12' text-anchor='middle' style='font-size: 19.21px;fill: #7570B3; font-family: "Arial";' textLength='111.02px' lengthAdjust='spacingAndGlyphs'>Lactobacillus</text>
 <text x='187.52' y='29.46' text-anchor='middle' style='font-size: 19.21px;fill: #A6761D; font-family: "Arial";' textLength='122.76px' lengthAdjust='spacingAndGlyphs'>Blautia obeum</text>
-<text x='165.58' y='111.95' text-anchor='middle' style='font-size: 19.21px;fill: #A6761D; font-family: "Arial";' textLength='170.77px' lengthAdjust='spacingAndGlyphs'>Eubacterium rectale</text>
+<text x='150.51' y='110.21' text-anchor='middle' style='font-size: 19.21px;fill: #A6761D; font-family: "Arial";' textLength='170.77px' lengthAdjust='spacingAndGlyphs'>Eubacterium rectale</text>
 <rect x='46.21' y='8.97' width='448.83' height='299.50' style='stroke-width: 1.75; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw1MDQuMDB8MC4wMHwzNjAuMDA=)'>
@@ -483,30 +484,30 @@
 <text x='422.47' y='326.84' text-anchor='middle' style='font-size: 14.40px;fill: #4D4D4D; font-family: "Arial";' textLength='20.01px' lengthAdjust='spacingAndGlyphs'>5.0</text>
 <text x='270.62' y='347.24' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='138.07px' lengthAdjust='spacingAndGlyphs'>Log2FoldChange</text>
 <text transform='translate(21.85,158.72) rotate(-90)' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='100.04px' lengthAdjust='spacingAndGlyphs'>-log(p.value)</text>
-<rect x='382.21' y='117.48' width='99.36' height='176.01' style='stroke-width: 0.53; fill: #FFFFFF;' />
-<rect x='384.20' y='119.48' width='95.38' height='172.03' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<text x='431.89' y='137.25' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='86.03px' lengthAdjust='spacingAndGlyphs'>Taxonomic</text>
-<text x='431.89' y='156.69' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='42.01px' lengthAdjust='spacingAndGlyphs'>Rank</text>
-<rect x='387.19' y='167.55' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='176.19' r='1.95' style='stroke-width: 0.71; stroke: #E7298A; fill: #E7298A;' />
-<rect x='387.19' y='184.83' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='193.47' r='1.95' style='stroke-width: 0.71; stroke: #E6AB02; fill: #E6AB02;' />
-<rect x='387.19' y='202.11' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='210.75' r='1.95' style='stroke-width: 0.71; stroke: #1B9E77; fill: #1B9E77;' />
-<rect x='387.19' y='219.39' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='228.03' r='1.95' style='stroke-width: 0.71; stroke: #66A61E; fill: #66A61E;' />
-<rect x='387.19' y='236.67' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='245.31' r='1.95' style='stroke-width: 0.71; stroke: #D95F02; fill: #D95F02;' />
-<rect x='387.19' y='253.95' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='262.59' r='1.95' style='stroke-width: 0.71; stroke: #7570B3; fill: #7570B3;' />
-<rect x='387.19' y='271.23' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<circle cx='395.83' cy='279.87' r='1.95' style='stroke-width: 0.71; stroke: #A6761D; fill: #A6761D;' />
-<text x='413.44' y='181.92' style='font-size: 16.00px; font-family: "Arial";' textLength='63.15px' lengthAdjust='spacingAndGlyphs'>Kingdom</text>
-<text x='413.44' y='199.20' style='font-size: 16.00px; font-family: "Arial";' textLength='53.35px' lengthAdjust='spacingAndGlyphs'>Phylum</text>
-<text x='413.44' y='216.48' style='font-size: 16.00px; font-family: "Arial";' textLength='40.01px' lengthAdjust='spacingAndGlyphs'>Class</text>
-<text x='413.44' y='233.76' style='font-size: 16.00px; font-family: "Arial";' textLength='40.90px' lengthAdjust='spacingAndGlyphs'>Order</text>
-<text x='413.44' y='251.04' style='font-size: 16.00px; font-family: "Arial";' textLength='47.11px' lengthAdjust='spacingAndGlyphs'>Family</text>
-<text x='413.44' y='268.32' style='font-size: 16.00px; font-family: "Arial";' textLength='47.14px' lengthAdjust='spacingAndGlyphs'>Genus</text>
-<text x='413.44' y='285.60' style='font-size: 16.00px; font-family: "Arial";' textLength='56.92px' lengthAdjust='spacingAndGlyphs'>Species</text>
+<rect x='384.20' y='119.48' width='99.36' height='176.01' style='stroke-width: 0.53; fill: #FFFFFF;' />
+<rect x='386.19' y='121.47' width='95.38' height='172.03' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<text x='433.88' y='139.24' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='86.03px' lengthAdjust='spacingAndGlyphs'>Taxonomic</text>
+<text x='433.88' y='158.68' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='42.01px' lengthAdjust='spacingAndGlyphs'>Rank</text>
+<rect x='389.18' y='169.55' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='178.19' r='1.95' style='stroke-width: 0.71; stroke: #E7298A; fill: #E7298A;' />
+<rect x='389.18' y='186.83' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='195.47' r='1.95' style='stroke-width: 0.71; stroke: #E6AB02; fill: #E6AB02;' />
+<rect x='389.18' y='204.11' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='212.75' r='1.95' style='stroke-width: 0.71; stroke: #1B9E77; fill: #1B9E77;' />
+<rect x='389.18' y='221.39' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='230.03' r='1.95' style='stroke-width: 0.71; stroke: #66A61E; fill: #66A61E;' />
+<rect x='389.18' y='238.67' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='247.31' r='1.95' style='stroke-width: 0.71; stroke: #D95F02; fill: #D95F02;' />
+<rect x='389.18' y='255.95' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='264.59' r='1.95' style='stroke-width: 0.71; stroke: #7570B3; fill: #7570B3;' />
+<rect x='389.18' y='273.23' width='17.28' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<circle cx='397.82' cy='281.87' r='1.95' style='stroke-width: 0.71; stroke: #A6761D; fill: #A6761D;' />
+<text x='415.43' y='183.91' style='font-size: 16.00px; font-family: "Arial";' textLength='63.15px' lengthAdjust='spacingAndGlyphs'>Kingdom</text>
+<text x='415.43' y='201.19' style='font-size: 16.00px; font-family: "Arial";' textLength='53.35px' lengthAdjust='spacingAndGlyphs'>Phylum</text>
+<text x='415.43' y='218.47' style='font-size: 16.00px; font-family: "Arial";' textLength='40.01px' lengthAdjust='spacingAndGlyphs'>Class</text>
+<text x='415.43' y='235.75' style='font-size: 16.00px; font-family: "Arial";' textLength='40.90px' lengthAdjust='spacingAndGlyphs'>Order</text>
+<text x='415.43' y='253.03' style='font-size: 16.00px; font-family: "Arial";' textLength='47.11px' lengthAdjust='spacingAndGlyphs'>Family</text>
+<text x='415.43' y='270.31' style='font-size: 16.00px; font-family: "Arial";' textLength='47.14px' lengthAdjust='spacingAndGlyphs'>Genus</text>
+<text x='415.43' y='287.59' style='font-size: 16.00px; font-family: "Arial";' textLength='56.92px' lengthAdjust='spacingAndGlyphs'>Species</text>
 </g>
 </svg>

@@ -77,7 +77,7 @@ mimic10.means %>%
             lwd = 1) + 
   geom_point(aes(color = Gavage), 
              position = position_dodge(width = .5)) +
-  scale_color_viridis_d() + 
+  scale_color_viridis_d(direction = -1) + 
   geom_errorbar(aes(ymin = lwr, 
                     ymax = upr,
                     color = Gavage),
@@ -90,8 +90,48 @@ mimic10.means %>%
  
 ggsave("../figures/lineplot_tumorvol_mim10.png")
 ggsave("../figures/Fig3C.svg")
+ggsave("../figures/Fig3C-wide.svg", 
+       height = 3.5, width =9)
 
 ```
+```{r}
+mimic10.means %>%
+  mutate(Gavage = if_else(grepl("v1", treatment.group),
+                          "Pre-BRB",
+                          "Post-BRB"),
+         Treatment = if_else(grepl("Anti", treatment.group),
+                             "Anti-PD1",
+                             "IgG"),
+         Gavage = fct_relevel(Gavage, c("Pre-BRB"))) %>%
+  ggplot(aes(x = days.from.injection, y = mean)) +
+  geom_line(aes(group = treatment.group,
+                color = Gavage,
+                linetype = Treatment), 
+            position = position_dodge(width = .5),
+            lwd = 1) + 
+  geom_point(aes(color = Gavage), 
+             position = position_dodge(width = .5)) +
+  scale_color_viridis_d(direction = -1) + 
+  geom_errorbar(aes(ymin = lwr, ymax = upr, color = Gavage),
+                width = 1,
+                position = position_dodge(width = .5),
+                lwd = 1) +
+  labs(x = "Days from Tumor Injection", 
+       y = expression("Tumor volume ("~mm^3~")")) +
+  theme_minimal(base_size = 20) + 
+  theme(
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    plot.background = element_blank(), 
+    axis.line = element_line()
+  ) +
+  scale_y_continuous(position = "right")
+
+ggsave("../figures/Fig3C-wide.svg", 
+       height = 3.5, width =9)
+
+```
+
 # Tumor Vol over Time - mimic1819
 
 ```{r}

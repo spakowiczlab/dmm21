@@ -86,20 +86,20 @@
 <rect x='247.29' y='51.47' width='92.00' height='137.47' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
 <text x='293.29' y='69.24' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='86.03px' lengthAdjust='spacingAndGlyphs'>Taxonomic</text>
 <text x='293.29' y='88.68' text-anchor='middle' style='font-size: 18.00px; font-family: "Arial";' textLength='42.01px' lengthAdjust='spacingAndGlyphs'>Rank</text>
-<rect x='253.63' y='99.55' width='17.01' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<rect x='254.34' y='100.25' width='15.59' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #66A61E;' />
-<rect x='253.63' y='116.83' width='17.01' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<rect x='254.34' y='117.53' width='15.59' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #1B9E77;' />
-<rect x='253.63' y='134.11' width='17.01' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<rect x='254.34' y='134.81' width='15.59' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E7298A;' />
-<rect x='253.63' y='151.39' width='17.01' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<rect x='254.34' y='152.09' width='15.59' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #D95F02;' />
-<rect x='253.63' y='168.67' width='17.01' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
-<rect x='254.34' y='169.37' width='15.59' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #7570B3;' />
-<text x='279.60' y='113.91' style='font-size: 16.00px; font-family: "Arial";' textLength='53.35px' lengthAdjust='spacingAndGlyphs'>Phylum</text>
-<text x='279.60' y='131.19' style='font-size: 16.00px; font-family: "Arial";' textLength='40.01px' lengthAdjust='spacingAndGlyphs'>Class</text>
-<text x='279.60' y='148.47' style='font-size: 16.00px; font-family: "Arial";' textLength='40.90px' lengthAdjust='spacingAndGlyphs'>Order</text>
-<text x='279.60' y='165.75' style='font-size: 16.00px; font-family: "Arial";' textLength='47.11px' lengthAdjust='spacingAndGlyphs'>Family</text>
-<text x='279.60' y='183.03' style='font-size: 16.00px; font-family: "Arial";' textLength='47.14px' lengthAdjust='spacingAndGlyphs'>Genus</text>
+<rect x='255.05' y='99.55' width='14.17' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect x='255.75' y='100.25' width='12.76' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #66A61E;' />
+<rect x='255.05' y='116.83' width='14.17' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect x='255.75' y='117.53' width='12.76' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #1B9E77;' />
+<rect x='255.05' y='134.11' width='14.17' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect x='255.75' y='134.81' width='12.76' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #E7298A;' />
+<rect x='255.05' y='151.39' width='14.17' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect x='255.75' y='152.09' width='12.76' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #D95F02;' />
+<rect x='255.05' y='168.67' width='14.17' height='17.28' style='stroke-width: 1.75; stroke: none; fill: #FFFFFF;' />
+<rect x='255.75' y='169.37' width='12.76' height='15.86' style='stroke-width: 1.07; stroke: none; stroke-linecap: butt; stroke-linejoin: miter; fill: #7570B3;' />
+<text x='278.19' y='113.91' style='font-size: 16.00px; font-family: "Arial";' textLength='53.35px' lengthAdjust='spacingAndGlyphs'>Phylum</text>
+<text x='278.19' y='131.19' style='font-size: 16.00px; font-family: "Arial";' textLength='40.01px' lengthAdjust='spacingAndGlyphs'>Class</text>
+<text x='278.19' y='148.47' style='font-size: 16.00px; font-family: "Arial";' textLength='40.90px' lengthAdjust='spacingAndGlyphs'>Order</text>
+<text x='278.19' y='165.75' style='font-size: 16.00px; font-family: "Arial";' textLength='47.11px' lengthAdjust='spacingAndGlyphs'>Family</text>
+<text x='278.19' y='183.03' style='font-size: 16.00px; font-family: "Arial";' textLength='47.14px' lengthAdjust='spacingAndGlyphs'>Genus</text>
 </g>
 </svg>
