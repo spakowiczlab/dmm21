@@ -1,3 +1,4 @@
+# set working directory to source file location 
 ascripts <- list.files("analysis-scripts", full.names = T)
 lapply(ascripts, source)
 
@@ -18,6 +19,8 @@ save(rber.desres, file = "../data/figure-data/desres_rberry.rda")
 #BEWELL figures
 
 bewell.tax <- read.csv("../data/BEWELL/bewell_taxonomy_relAbun.csv")
+respondersig <- read.csv("../data/BEWELL/respondersig-PLSDA-RA.csv")
+respondersig.response <- read.csv("../data/BEWELL/respondersig-response.csv")
 
 stackdatBW <- stackedBarBEWELL(bewell.tax, 7)
 model_res_BW <- modelBW(bewell.tax)
@@ -26,11 +29,15 @@ mic_fc_BW <- foldchangeBW(bewell.tax)
 Bo_abun_BW <- barMicAbun(bewell.tax)
 
 lachno.phylo <- preparePhyloDat(bewell.tax, model_res_BW, 0.05)
+bewellsig.pca <- respondersigPCA(respondersig, respondersig.response)
+bewellsig.dist <- respondersigDist(respondersig, respondersig.response)
 
 save(stackdatBW, file = "../data/figure-data/stackedbar_bewell.rda")
 save(model_res_BW, mic_fc_BW, file = "../data/figure-data/model_stats_BW.rda")
 save(Bo_abun_BW, file = "../data/figure-data/bardat_Bo_BW.rda")
 save(lachno.phylo, file = "../data/figure-data/phylo_lacho-bewell.rda")
+save(bewellsig.pca, file = "../data/figure-data/bewell-respondersig-pca.rda")
+save(bewellsig.dist, file = "../data/figure-data/bewell-respondersig-dist.rda")
 
 #mimic figures
 

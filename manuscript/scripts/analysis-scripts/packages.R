@@ -11,4 +11,6 @@ library(readxl)
 library(taxize)
 library(phytools)
 library(phylobase)
+library(mixOmics)
 # library(DESeq2) will break tidyverse if loaded for everything
+
