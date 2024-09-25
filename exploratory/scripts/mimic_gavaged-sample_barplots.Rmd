@@ -64,11 +64,15 @@ ggsave("../figures/Blautia_obeum_abundance_bar_all.png",
 ```
 
 ```{r}
-microbesofinterest <- c("s__Blautia_obeum",
-                        "s__Roseburia_sp_CAG_309")
+microbesofinterest <- c("s__Roseburia_sp_CAG_309",
+                        "s__Lactobacillus_animalis",
+                        "s__Blautia_obeum",
+                        "s__Lachnospira_pectinoschiza",
+                        "s__Parabacteroides_goldsteinii")
 
 aml %>%
   filter(microbe %in% microbesofinterest) %>%
+  mutate(microbe = str_replace_all(microbe, pattern = c("^s__" = "", "_" = " "))) %>% 
   ggplot(aes(x = study_visit, y = relAbun)) +
   geom_bar(stat = "identity", aes(fill = microbe)) +
   scale_fill_viridis_d() +
@@ -78,6 +82,8 @@ aml %>%
   facet_wrap(~ptid, nrow = 1)
 
 ggsave("../figures/Blautia_obeum_abundance_bar_all.png",
+       height = 7.5, width = 10)
+ggsave("../figures/Blautia_obeum_abundance_bar_all.svg",
        height = 7.5, width = 10)
 ```
 
