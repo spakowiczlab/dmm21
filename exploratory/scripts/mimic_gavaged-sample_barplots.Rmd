@@ -72,6 +72,7 @@ microbesofinterest <- c("s__Roseburia_sp_CAG_309",
 
 aml %>%
   filter(microbe %in% microbesofinterest) %>%
+  filter(study_visit %in% c("rB", "tB")) %>%
   mutate(microbe = str_replace_all(microbe, pattern = c("^s__" = "", "_" = " "))) %>% 
   ggplot(aes(x = study_visit, y = relAbun)) +
   geom_bar(stat = "identity", aes(fill = microbe)) +
@@ -81,13 +82,11 @@ aml %>%
        y = "Relative Abundance") +
   facet_wrap(~ptid, nrow = 1)
 
-ggsave("../figures/Blautia_obeum_abundance_bar_all.png",
+ggsave("../figures/BRB-enriched-microbe.png",
        height = 7.5, width = 10)
-ggsave("../figures/Blautia_obeum_abundance_bar_all.svg",
-       height = 7.5, width = 10)
+ggsave("../figures/BRB-enriched-microbe.svg",
+       height = 5, width = 7)
 ```
-
-
 
 ```{r}
 plotMicrobe <- function(df, name){

@@ -1,0 +1,244 @@
+---
+title: "metabolomics_2022-2023"
+author: "Shiva Jahanbakhshi"
+date: "2024-09-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(broom)
+library(readxl)
+
+```
+
+```{r}
+mimic_blood_lipid_04_23 <- read_xlsx("../data/metabolomics/04-23-mimic-blood-lipid.xlsx")
+mimic_blood_polar_04_2023 <- read_xlsx("../data/metabolomics/04-2023 mimic blood polar.xlsx")
+mimic_stool_SCFA_raw_data_04_2023 <- read_xlsx("../data/metabolomics/04-2023 mimic stool SCFA_raw data.xlsx",
+                                               n_max = 13)
+mimic10_feces_polar_raw_data_07_2022 <- read_xlsx("../data/metabolomics/07-2022 mimic10 feces_polar_raw data.xlsx")
+mimic_stool_polar_raw_data_11_2023 <- read_xlsx("../data/metabolomics/11-2023 mimic stool polar_raw data.xlsx")
+
+```
+
+#SCFA
+```{r}
+mimic_stool_SCFA_raw_data_04_2023[mimic_stool_SCFA_raw_data_04_2023 == "N/A"] <- "0"
+
+
+mimic_stool_SCFA_raw_data_04_2023 <- mimic_stool_SCFA_raw_data_04_2023 %>%
+  mutate(across(c(`Acetic acid`, `Butyric acid`, `Isobutyric acid`, `Isovaleric acid`, 
+                  `Valeric acid`, `Isocaproic acid`, `Heptanoic acid`),
+                ~ as.numeric(as.character(.))))
+
+
+long_data_SCFA <- mimic_stool_SCFA_raw_data_04_2023 %>%
+  pivot_longer(
+    cols = c(`Acetic acid`, `Butyric acid`, `Isobutyric acid`, `Isovaleric acid`, 
+             `Valeric acid`, `Isocaproic acid`, `Heptanoic acid`),
+    names_to = "SCFA", 
+    values_to = "value"
+  )
+
+ggplot(long_data_SCFA, aes(x = Intervention, y = log(value), fill = Intervention)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +  
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  facet_wrap(~ SCFA, scales = "free_y", ncol = 4) +  
+  labs(x = "", 
+       y = "SCFA") +
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  scale_fill_brewer(palette = "Dark2")
+
+
+
+```
+
+```{r}
+SCFA <- c("Acetic acid", "Butyric acid", "Isobutyric acid", "Isovaleric acid", 
+             "Valeric acid", "Isocaproic acid", "Heptanoic acid")
+
+model_df_SCFA <- mimic_stool_SCFA_raw_data_04_2023 %>%
+  mutate(Blautia = if_else(grepl("Blautia", Intervention), 1, 0))
+
+lm_SCFA <- glm(Blautia ~ `Acetic acid`, data = model_df_SCFA, family="binomial") 
+summary(lm_SCFA)
+
+results_df_SCFA <- data.frame(SCFA = character(), p_value = numeric(), estimate = numeric(), stringsAsFactors = FALSE)
+
+for (n in SCFA) {
+  f_SCFA <- as.formula(paste0("Blautia ~ `", n, "`"))
+  lm_SCFA <- glm(f_SCFA, data = model_df_SCFA, family = "binomial")
+  tidy_lm <- tidy(lm_SCFA)
+  
+  if (length(tidy_lm$p.value) > 1) {
+    estimate <- tidy_lm$estimate[2]
+    p_value <- tidy_lm$p.value[2]
+    results_df_SCFA <- rbind(results_df_SCFA, data.frame(SCFA = n, estimate = estimate, p_value = p_value))
+  } else {
+    results_df_SCFA <- rbind(results_df_SCFA, data.frame(SCFA = n, estimate = NA, p_value = NA))
+  }
+}
+
+significant_results_SCFA <- results_df_SCFA %>%
+  filter(p_value < 0.05)
+
+print(significant_results_SCFA)
+
+```
+
+#Feces
+```{r}
+df_transposed_feces <- mimic_stool_polar_raw_data_11_2023 %>%
+  column_to_rownames(var = "Name") %>%
+  t() %>% 
+  as.data.frame() %>%
+  rownames_to_column(var = "Name")
+
+df_transposed_feces <- df_transposed_feces %>%
+  mutate(across(5:208, as.numeric))
+
+model_df_feces <- df_transposed_feces %>%
+  mutate(Blautia = if_else(grepl("Blautia", Intervention), 1, 0))
+
+m_feces <- setdiff(colnames(model_df_feces %>% select(where(is.numeric))), "Blautia")
+
+results_df_feces <- data.frame(molecules = character(), estimate = numeric(), p_value = numeric(), stringsAsFactors = FALSE)
+
+for (n in m_feces) {
+  f_feces <- as.formula(paste0("Blautia ~ `", n, "`"))
+  
+  lm_feces <- glm(f_feces, data = model_df_feces, family = "binomial")
+  
+  tidy_lm_feces <- tidy(lm_feces)
+  
+  if (length(tidy_lm_feces$p.value) > 1) {
+    estimate <- tidy_lm_feces$estimate[2]
+    p_value <- tidy_lm_feces$p.value[2]
+    results_df_feces <- rbind(results_df_feces, data.frame(molecules = n, estimate = estimate, p_value = p_value))
+  } else {
+    results_df_feces <- rbind(results_df_feces, data.frame(molecules = n, estimate = NA, p_value = NA))
+  }
+}
+
+significant_results_feces <- results_df_feces %>%
+  filter(p_value < 0.05)
+
+print(significant_results_feces)
+
+```
+
+#blood Polar
+```{r}
+model_df_blood <- mimic_blood_polar_04_2023 %>%
+  mutate(Blautia = if_else(grepl("Blautia", Intervention), 1, 0))  
+
+m_blood <- setdiff(colnames(model_df_blood %>% select(where(is.numeric))), "Blautia")
+
+results_df_blood <- data.frame(molecules = character(), estimate = numeric(), p_value = numeric(), stringsAsFactors = FALSE)
+
+for (n in m_blood) {
+  f_blood <- as.formula(paste0("Blautia ~ `", n, "`"))
+  
+  lm_blood <- glm(f_blood, data = model_df_blood, family = "binomial")
+  
+  tidy_lm_blood <- tidy(lm_blood)
+  
+  if (length(tidy_lm_blood$p.value) > 1) {
+    estimate <- tidy_lm_blood$estimate[2]
+    p_value <- tidy_lm_blood$p.value[2]
+    results_df_blood <- rbind(results_df_blood, data.frame(molecules = n, estimate = estimate, p_value = p_value))
+  } else {
+    results_df_blood <- rbind(results_df_blood, data.frame(molecules = n, estimate = NA, p_value = NA))
+  }
+}
+
+significant_results_blood <- results_df_blood %>%
+  filter(p_value < 0.05)
+
+print(significant_results_blood)
+
+```
+
+```{r}
+results_df_blood <- results_df_blood %>%
+  mutate(padj = p.adjust(p_value, method = "fdr"),
+         neg_log_padj = -log10(padj))
+
+ggplot(results_df_blood, aes(x = estimate, y = neg_log_padj)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Estimate", y = "-log10(Adjusted p-value)") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-0.00001, 0.00001)) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+```{r}
+selected_molecules_blood <- results_df_blood %>%
+  arrange(p_value, desc(abs(estimate))) %>%  
+  slice(1:2)  
+
+selected_molecule_1 <- selected_molecules_blood$molecules[1]
+selected_molecule_2 <- selected_molecules_blood$molecules[2]
+
+ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_1]], fill = Intervention)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Intervention", 
+       y = selected_molecule_1) +
+  theme(legend.position = "none")
+
+ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_2]], fill = Intervention)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Intervention", 
+       y = selected_molecule_2) +
+  theme(legend.position = "none")
+
+```
+```{r}
+library(ggplot2)
+library(dplyr)
+
+selected_molecules_blood <- results_df_blood %>%
+  arrange(p_value, desc(abs(estimate))) %>%
+  slice(1:3)  
+
+selected_molecule_1 <- selected_molecules_blood$molecules[1]
+selected_molecule_2 <- selected_molecules_blood$molecules[2]
+selected_molecule_3 <- selected_molecules_blood$molecules[3]
+
+ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_1]], fill = Intervention)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Intervention", 
+       y = selected_molecule_1) +
+  theme(legend.position = "none")
+
+ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_2]], fill = Intervention)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Intervention", 
+       y = selected_molecule_2) +
+  theme(legend.position = "none")
+
+ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_3]], fill = Intervention)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Intervention", 
+       y = selected_molecule_3) +
+  theme(legend.position = "none")
+
+```
+
