@@ -10,6 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(ggtext)
+library(viridis)
+
 ```
 
 # Load data
@@ -247,5 +249,21 @@ ggsave("../figures/bewell_heatmap_interaction.png",
        height =  6, width = 6)
 ggsave("../figures/Fig3D.svg",
        height =  3, width = 6)
+```
+
+```{r}
+mimic.longmods %>%
+  filter(term.adj %in% c("Anti-PD1", "Gavage")) %>%
+  mutate(Combined_ID2 = gsub(".*\\(([^)]+)\\).*", "\\1", `Combined ID`)) %>%  
+  ggplot(aes(x = Combined_ID2, y = term.adj, fill = estimate, alpha = sig.flag)) +
+  geom_tile(color = "black") +
+  scale_fill_viridis(option = "magma") +
+  coord_fixed() +
+  guides(alpha = "none") +
+  theme_bw() +
+  labs(x = "Test Microbe (Sample ID)", y = "")
+
+ggsave("../figures/Fig3D-heatmap.svg",
+       height =  4, width = 8)
 ```
 
