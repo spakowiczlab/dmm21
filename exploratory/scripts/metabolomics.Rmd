@@ -98,16 +98,59 @@ for (n in scfas) {
 ```
 
 ```{r}
-results_df <- data.frame(SCFA = character(), p_value = numeric(), stringsAsFactors = FALSE)
+results_df <- data.frame(SCFA = character(), estimate = numeric(), p_value = numeric(), stringsAsFactors = FALSE)
 
 for (n in scfas) {
   f <- as.formula(paste0("Blautia ~ ", n))
     lm0 <- glm(f, data = model_df, family = "binomial")
+    estimate <- tidy(lm0)$estimate[2]
     p_value <- tidy(lm0)$p.value[2]
-    results_df <- rbind(results_df, data.frame(SCFA = n, p_value = p_value))
+    results_df <- rbind(results_df, data.frame(SCFA = n, estimate = estimate, p_value = p_value))
 }
 
 print(results_df)
+
+
+```
+```{r}
+results_df <- results_df %>%
+  mutate(padj = p.adjust(p_value, method = "fdr"),
+         neg_log_padj = -log10(padj))
+
+ggplot(results_df, aes(x = estimate, y = neg_log_padj)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Estimate", y = "-log10(Adjusted p-value)") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-20000, 140000)) +  
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+# Select molecules with the largest effect size (absolute) and smallest p-value
+selected_molecules <- results_df %>%
+  arrange(p_value, desc(abs(estimate))) %>% # Sort by smallest p-value and largest effect size
+  slice(1:2)  # Select the top two molecules
+
+selected_molecule_1 <- selected_molecules$SCFA[1]
+selected_molecule_2 <- selected_molecules$SCFA[2]
+
+ggplot(model_df, aes(x = microbiome.sample, y = .data[[selected_molecule_1]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_1) +
+  theme(legend.position = "none")
+
+ggplot(model_df, aes(x = microbiome.sample, y = .data[[selected_molecule_2]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_2) +
+  theme(legend.position = "none")
 
 ```
 
@@ -208,31 +251,27 @@ ggplot(results_df1, aes(x = estimate, y = neg_log_padj)) +
 
 ```
 ```{r}
-# Select molecules with the largest effect size (absolute) and smallest p-value
 selected_molecules1 <- results_df1 %>%
-  arrange(p_value, desc(abs(estimate))) %>%  # Sort by smallest p-value and largest effect size
-  slice(1:2)  # Select the top two molecules
+  arrange(p_value, desc(abs(estimate))) %>%  
+  slice(1:2)
 
-# Assuming your original data contains the selected molecules and gavage groups
-selected_molecule_1 <- selected_molecules1$molecules[1]
-selected_molecule_2 <- selected_molecules1$molecules[2]
+selected_molecule_3 <- selected_molecules1$molecules[1]
+selected_molecule_4 <- selected_molecules1$molecules[2]
 
-# Plot for the first selected molecule
-ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_1]], fill = microbiome.sample)) +
+ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
   scale_fill_brewer(palette = "Dark2") +  
   labs(x = "Microbiome Sample", 
-       y = selected_molecule_1) +
+       y = selected_molecule_3) +
   theme(legend.position = "none")
 
-# Plot for the second selected molecule
-ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_2]], fill = microbiome.sample)) +
+ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
   scale_fill_brewer(palette = "Dark2") +  
   labs(x = "Microbiome Sample", 
-       y = selected_molecule_2) +
+       y = selected_molecule_4) +
   theme(legend.position = "none")
 
 ```
@@ -303,31 +342,27 @@ ggplot(results_df2, aes(x = estimate, y = neg_log_padj)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 ```{r}
-# Select molecules with the largest effect size (absolute) and smallest p-value
 selected_molecules2 <- results_df2 %>%
-  arrange(p_value, desc(abs(estimate))) %>%  # Sort by smallest p-value and largest effect size
-  slice(1:2)  # Select the top two molecules
+  arrange(p_value, desc(abs(estimate))) %>% 
+  slice(1:2)  
 
-# Assuming your original data contains the selected molecules and gavage groups
-selected_molecule_1 <- selected_molecules2$molecules[1]
-selected_molecule_2 <- selected_molecules2$molecules[2]
+selected_molecule_5 <- selected_molecules2$molecules[1]
+selected_molecule_6 <- selected_molecules2$molecules[2]
 
-# Plot for the first selected molecule
-ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_1]], fill = microbiome.sample)) +
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
   scale_fill_brewer(palette = "Dark2") +  
   labs(x = "Microbiome Sample", 
-       y = selected_molecule_1) +
+       y = selected_molecule_5) +
   theme(legend.position = "none")
 
-# Plot for the second selected molecule
-ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_2]], fill = microbiome.sample)) +
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
   scale_fill_brewer(palette = "Dark2") +  
   labs(x = "Microbiome Sample", 
-       y = selected_molecule_2) +
+       y = selected_molecule_6) +
   theme(legend.position = "none")
 
 ```
