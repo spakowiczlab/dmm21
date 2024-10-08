@@ -205,9 +205,6 @@ ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_2]], f
 
 ```
 ```{r}
-library(ggplot2)
-library(dplyr)
-
 selected_molecules_blood <- results_df_blood %>%
   arrange(p_value, desc(abs(estimate))) %>%
   slice(1:3)  
@@ -241,4 +238,26 @@ ggplot(model_df_blood, aes(x = Intervention, y = .data[[selected_molecule_3]], f
   theme(legend.position = "none")
 
 ```
+#mimic10 feces
+```{r}
+mimic10_tumor_size <- read_xlsx("/Users/jaha05/Documents/GitHub/mimic/data/tumor-size/AOT00046213-mimic10/AOT00046213_mimic10_size-measurements.xlsx")
+
+mimic10_tumor_size$Name <- paste0("6M", mimic10_tumor_size$tail.number, "C", mimic10_tumor_size$cage)
+
+df_transposed_mimic10_feces <- mimic10_feces_polar_raw_data_07_2022 %>%
+  column_to_rownames(var = "Name") %>%
+  t() %>% 
+  as.data.frame() %>%
+  rownames_to_column(var = "Name")
+
+merged_data <- df_transposed_mimic10_feces %>%
+  left_join(mimic10_tumor_size %>%
+              filter(grepl("2022-05-18", date)) %>%
+              select(Name, microbiome.sample), 
+            by = "Name")
+
+```
+
+
+
 

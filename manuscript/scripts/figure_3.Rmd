@@ -153,7 +153,7 @@ mimic1819.means %>%
 ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
        height = 5, width = 7)
 ggsave("../figures/Fig3E.svg", 
-       height = 5, width = 7)
+       height = 3, width = 5)
 
 ```
 
@@ -261,9 +261,35 @@ mimic.longmods %>%
   coord_fixed() +
   guides(alpha = "none") +
   theme_bw() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
   labs(x = "Test Microbe (Sample ID)", y = "")
 
 ggsave("../figures/Fig3D-heatmap.svg",
        height =  4, width = 8)
 ```
+```{r}
+mimic.longmods %>%
+  filter(term.adj %in% c("Anti-PD1", "Gavage")) %>%
+  mutate(Combined_ID2 = gsub(".*\\(([^)]+)\\).*", "\\1", `Combined ID`)) %>%
+  mutate(Combined_ID2 = case_when(
+    Combined_ID2 == "DL081" ~ "Control-NR",
+    Combined_ID2 == "DL017" ~ "Control-R",
+    Combined_ID2 == "Control-NR" ~ "Control-R",
+    Combined_ID2 == "Control-R" ~ "Control-NR",
+    TRUE ~ Combined_ID2
+  )) %>%
+  ggplot(aes(x = Combined_ID2, y = term.adj, fill = estimate, alpha = sig.flag)) +
+  geom_tile(color = "black") +
+  scale_fill_viridis(option = "magma") +
+  coord_fixed() +
+  guides(alpha = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
+  labs(x = "Test Microbe (Sample ID)", y = "")
+ggsave("../figures/Fig3D-heatmap.svg",
+       height =  4, width = 8)
+
+```
+
+
 
