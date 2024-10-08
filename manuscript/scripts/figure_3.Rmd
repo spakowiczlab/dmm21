@@ -148,7 +148,7 @@ mimic1819.means %>%
   labs(x = "Days from Tumor Injection", 
        y = expression("Mean Tumor volume ("~mm^3~")"))  +
   theme_bw() +
-  scale_color_viridis_d()
+  scale_color_viridis_d(option = "cividis")
 
 ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
        height = 5, width = 7)

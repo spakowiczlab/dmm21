@@ -73,6 +73,32 @@ ggsave("../figures/SCFA-plot.svg", width = 8, height = 5)
 
 
 ```
+```{r}
+long_data <- normalized_cleaned_data %>%
+  pivot_longer(cols = c(`butyric acid`, `valeric acid`, `heptanoic acid`),
+               names_to = "variable", values_to = "value") %>%
+  mutate(microbiome.sample = factor(microbiome.sample, 
+                                    levels = c("PBS", "Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample, 
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
+ggplot(long_data, aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +  
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  facet_wrap(~ variable, scales = "free_y", ncol = 5) +
+  labs(x = "", 
+       y = "Normalized SCFA") +
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 55, hjust = 1)) +  
+  scale_fill_viridis_d(option = "cividis", direction = -1) 
+
+ggsave("../figures/SCFA-plot.fig4.svg", width = 5, height = 3)
+
+```
 
 ```{r}
 scfas <- c("acetic.acid", "butyric.acid", "caproic.acid", 
@@ -251,6 +277,14 @@ ggplot(results_df1, aes(x = estimate, y = neg_log_padj)) +
 
 ```
 ```{r}
+model_df1 <- model_df1 %>%
+  mutate(microbiome.sample = factor(microbiome.sample, 
+                                    levels = c("PBS", "Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample, 
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
 selected_molecules1 <- results_df1 %>%
   arrange(p_value, desc(abs(estimate))) %>%  
   slice(1:2)
@@ -261,7 +295,7 @@ selected_molecule_4 <- selected_molecules1$molecules[2]
 ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_brewer(palette = "Dark2") +  
+  scale_fill_viridis_d(option = "cividis", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_3) +
   theme(legend.position = "none")
@@ -269,7 +303,7 @@ ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], f
 ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_brewer(palette = "Dark2") +  
+  scale_fill_viridis_d(option = "cividis", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_4) +
   theme(legend.position = "none")
@@ -352,7 +386,7 @@ selected_molecule_6 <- selected_molecules2$molecules[2]
 ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_brewer(palette = "Dark2") +  
+    scale_fill_viridis_d(option = "cividis") +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_5) +
   theme(legend.position = "none")
@@ -360,10 +394,48 @@ ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], f
 ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_brewer(palette = "Dark2") +  
+    scale_fill_viridis_d(option = "cividis", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_6) +
   theme(legend.position = "none")
+
+```
+
+```{r}
+model_df2 <- model_df2 %>%
+  mutate(microbiome.sample = factor(microbiome.sample, 
+                                    levels = c("PBS", "Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample, 
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
+selected_molecules2 <- results_df2 %>%
+  arrange(p_value, desc(abs(estimate))) %>% 
+  slice(1:2)  
+
+selected_molecule_5 <- selected_molecules2$molecules[1]
+selected_molecule_6 <- selected_molecules2$molecules[2]
+
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "cividis", direction = -1) +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_5) +
+  theme(legend.position = "none")
+
+ggsave("../figures/Fig4C.svg",
+       height = 3, width = 5)
+
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "cividis", direction = -1 ) +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_6) +
+  theme(legend.position = "none")
+
 
 ```
 
