@@ -62,6 +62,18 @@ aml %>%
 ggsave("../figures/Blautia_obeum_abundance_bar_all.png",
        height = 7.5, width = 10)
 ```
+```{r}
+aml %>%
+  filter(microbe == "s__Blautia_obeum", ptid == 85) %>%  # Filter for ptid == 85
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = study_visit), show.legend = FALSE) +
+  scale_fill_viridis_d(direction = -1) + 
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance of Lachnospiraceae") +
+  facet_wrap(~ptid, nrow = 1)
+
+```
 
 ```{r}
 microbesofinterest <- c("s__Roseburia_sp_CAG_309",
@@ -87,6 +99,23 @@ ggsave("../figures/BRB-enriched-microbe.png",
 ggsave("../figures/BRB-enriched-microbe.svg",
        height = 5, width = 7)
 ```
+```{r}
+aml %>%
+  filter(microbe %in% microbesofinterest, ptid == 85) %>%
+  filter(study_visit %in% c("rB", "tB")) %>%
+  mutate(microbe = str_replace_all(microbe, pattern = c("^s__" = "", "_" = " "))) %>% 
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = microbe)) +
+  scale_fill_viridis_d(option = "cividis") + 
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance of Lachnospiraceae") +
+  facet_wrap(~ptid, nrow = 1)
+
+ggsave("../figures/fig4-85.svg",
+       height = 3, width = 5)
+```
+
 ```{r}
 plotMicrobe <- function(df, name){
   p <- 
