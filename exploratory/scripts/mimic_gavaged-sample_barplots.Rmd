@@ -108,7 +108,7 @@ aml %>%
   geom_bar(stat = "identity", aes(fill = microbe)) +
   scale_fill_viridis_d(option = "cividis") + 
   theme_bw() +
-  labs(x = "",
+  labs(x = "Sample",
        y = "Relative Abundance of Lachnospiraceae") +
   facet_wrap(~ptid, nrow = 1)
 

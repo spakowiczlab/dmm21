@@ -146,7 +146,7 @@ mimic1819.means %>%
   geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) + 
   geom_point(aes(color = Supplement))+
   labs(x = "Days from Tumor Injection", 
-       y = expression("Mean Tumor volume ("~mm^3~")"))  +
+       y = expression("Mean Tumor Volume ("~mm^3~")"))  +
   theme_bw() +
   scale_color_viridis_d(option = "cividis")
 

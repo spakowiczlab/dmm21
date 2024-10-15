@@ -80,6 +80,7 @@
 <polyline points='32.85,109.55 35.59,109.55 ' style='stroke-width: 1.07; stroke: #333333; stroke-linecap: butt;' />
 <polyline points='32.85,75.76 35.59,75.76 ' style='stroke-width: 1.07; stroke: #333333; stroke-linecap: butt;' />
 <polyline points='32.85,41.97 35.59,41.97 ' style='stroke-width: 1.07; stroke: #333333; stroke-linecap: butt;' />
+<text x='119.88' y='208.20' text-anchor='middle' style='font-size: 11.00px; font-family: "Arial";' textLength='37.30px' lengthAdjust='spacingAndGlyphs'>Sample</text>
 <text transform='translate(13.36,103.45) rotate(-90)' text-anchor='middle' style='font-size: 11.00px; font-family: "Arial";' textLength='196.98px' lengthAdjust='spacingAndGlyphs'>Relative Abundance of Lachnospiraceae</text>
 <rect x='215.13' y='46.93' width='139.39' height='113.03' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
 <text x='220.61' y='61.45' style='font-size: 11.00px; font-family: "Arial";' textLength='39.13px' lengthAdjust='spacingAndGlyphs'>microbe</text>

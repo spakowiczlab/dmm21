@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(broom)
 library(readxl)
+library(scales)
+
 
 ```
 
@@ -295,7 +297,7 @@ selected_molecule_4 <- selected_molecules1$molecules[2]
 ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_viridis_d(option = "plasma", direction = -1) +  
+  scale_fill_brewer(palette = "Paired", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_3) +
   theme(legend.position = "none")
@@ -303,7 +305,7 @@ ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], f
 ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_viridis_d(option = "plasma", direction = -1) +  
+  scale_fill_brewer(palette = "Paired", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_4) +
   theme(legend.position = "none")
@@ -417,21 +419,32 @@ selected_molecules2 <- results_df2 %>%
 selected_molecule_5 <- selected_molecules2$molecules[1]
 selected_molecule_6 <- selected_molecules2$molecules[2]
 
+# Custom scientific notation function
+scientific_no_plus <- function(x) {
+  ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
+}
+
 ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], fill = microbiome.sample)) +
   geom_boxplot() +
   geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
   theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 20, hjust = 1)) +
   scale_fill_brewer(palette = "Paired", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_5) +
+  scale_y_continuous(labels = scientific_no_plus) + 
   theme(legend.position = "none")
-
 ggsave("../figures/Fig4C.svg",
        height = 3, width = 5)
 
 ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], fill = microbiome.sample)) +
   geom_boxplot() +
   theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 55, hjust = 1)) +
   scale_fill_brewer(palette = "Paired", direction = -1) +  
   labs(x = "Microbiome Sample", 
        y = selected_molecule_6) +
