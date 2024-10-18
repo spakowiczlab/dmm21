@@ -24,7 +24,6 @@ mimic24_feces_combined <- read_excel("../data/metabolomics/mimic24_feces_combine
 mimic24_blood_combined <- read_excel("../data/metabolomics/mimic24_blood_combined.xlsx",
                                          sheet = "Full")
 ```
-
 # mimic24 SCFA
 ```{r}
 mimic_24_SCFA_Data_Summary[is.na(mimic_24_SCFA_Data_Summary)] <- 0
@@ -47,7 +46,6 @@ colnames(normalized_cleaned_data) <- gsub("^norm_", "", colnames(normalized_clea
 
 
 ```
-
 
 
 ```{r}
@@ -296,6 +294,7 @@ selected_molecule_4 <- selected_molecules1$molecules[2]
 
 ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], fill = microbiome.sample)) +
   geom_boxplot() +
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
   theme_minimal() +
   scale_fill_brewer(palette = "Paired", direction = -1) +  
   labs(x = "Microbiome Sample", 
@@ -304,6 +303,7 @@ ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], f
 
 ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], fill = microbiome.sample)) +
   geom_boxplot() +
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
   theme_minimal() +
   scale_fill_brewer(palette = "Paired", direction = -1) +  
   labs(x = "Microbiome Sample", 
@@ -312,6 +312,30 @@ ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], f
 
 ```
 
+```{r}
+
+scientific_no_plus <- function(x) {
+  ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
+}
+
+selected_molecules_feces <- list("DL-Tryptophan", "N-Acetyl-DL-tryptophan", "Inosine", "Deoxyinosine", "trans-3-Indoleacrylic acid", "Dihydroxyindole", "Indole-2-carboxylic acid", "5-Hydroxyindole-3-acetic acid", "5-Methoxy-3-indoleaceate", "Ethyl 3-Indoleacetate")
+
+plot_molecule <- function(molecule) {
+  ggplot(model_df1, aes(x = microbiome.sample, y = .data[[molecule]], fill = microbiome.sample)) +
+    geom_boxplot() +
+    geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+    theme_minimal() +
+    scale_fill_brewer(palette = "Paired", direction = -1) +  
+    labs(x = "", 
+         y = molecule) +
+    scale_y_continuous(labels = scientific_no_plus) + 
+    theme(legend.position = "none")
+}
+
+for (molecule in selected_molecules_feces) {
+  print(plot_molecule(molecule))
+}
+```
 
 ```{r}
 mimic24_blood_combined_C <- mimic24_blood_combined %>%
@@ -402,6 +426,31 @@ ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], f
   theme(legend.position = "none")
 
 ```
+```{r}
+scientific_no_plus <- function(x) {
+  ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
+}
+
+plot_molecule <- function(molecule) {
+  ggplot(model_df2, aes(x = microbiome.sample, y = .data[[molecule]], fill = microbiome.sample)) +
+    geom_boxplot() +
+    geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+    theme_minimal() +
+    scale_fill_brewer(palette = "Paired", direction = -1) +  
+    labs(x = "", 
+         y = molecule) +
+    scale_y_continuous(labels = scientific_no_plus) + 
+    theme(legend.position = "none")
+}
+
+selected_molecules_blood <- list("DL-Tryptophan", "L-Tryptophan", "Inosine", "trans-3-Indoleacrylic acid", "Dihydroxyindole")
+
+for (molecule in selected_molecules_blood) {
+  print(plot_molecule(molecule))
+}
+
+
+```
 
 ```{r}
 model_df2 <- model_df2 %>%
@@ -453,4 +502,3 @@ ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], f
 
 
 ```
-
