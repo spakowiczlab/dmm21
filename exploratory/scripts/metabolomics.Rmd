@@ -335,6 +335,27 @@ plot_molecule <- function(molecule) {
 for (molecule in selected_molecules_feces) {
   print(plot_molecule(molecule))
 }
+
+ggsave("../figures/DL-Tryptophan.svg",
+       height = 3, width = 5)
+ggsave("../figures/N-Acetyl-DL-tryptophan.svg",
+       height = 3, width = 5)
+ggsave("../figures/Inosine.svg",
+       height = 3, width = 5)
+ggsave("../figures/Deoxyinosine.svg",
+       height = 3, width = 5)
+ggsave("../figures/trans-3-Indoleacrylic acid.svg",
+       height = 3, width = 5)
+ggsave("../figures/Dihydroxyindole.svg",
+       height = 3, width = 5)
+ggsave("../figures/Indole-2-carboxylic acid.svg",
+       height = 3, width = 5)
+ggsave("../figures/5-Hydroxyindole-3-acetic acid.svg",
+       height = 3, width = 5)
+ggsave("../figures/5-Methoxy-3-indoleaceate.svg",
+       height = 3, width = 5)
+ggsave("../figures/Ethyl 3-Indoleacetate.svg",
+       height = 3, width = 5)
 ```
 
 ```{r}
@@ -449,7 +470,16 @@ for (molecule in selected_molecules_blood) {
   print(plot_molecule(molecule))
 }
 
-
+ggsave("../figures/Blood-DL-Tryptophan.svg",
+       height = 3, width = 5)
+ggsave("../figures/Blood-L-Tryptophan.svg",
+       height = 3, width = 5)
+ggsave("../figures/Blood-Inosine.svg",
+       height = 3, width = 5)
+ggsave("../figures/Blood-Dihydroxyindole.svg",
+       height = 3, width = 5)
+ggsave("../figures/Blood-trans-3-Indoleacrylic acid.svg",
+       height = 3, width = 5)
 ```
 
 ```{r}
