@@ -134,7 +134,7 @@ ggsave("../figures/Fig3C-wide.svg",
 
 ```
 
-# Tumor Vol over Time - mimic1819
+# Tumor Vol over Time - mimic1819 this is now in Figure 4
 
 ```{r}
 mimic1819.means %>%
