@@ -19,7 +19,7 @@ library(viridis)
 ```{r}
 load("../data/figure-data/bardat_Bo_BW.rda")
 load("../data/figure-data/tvol_m10.rda")
-load("../data/figure-data/tvol_m1819.rda")
+
 load("../data/figure-data/fracresponse_blautia-gavage.rda")
 load("../data/figure-data/boxdat_mimic.rda")
 load("../data/figure-data/longmods_mimic-heatmap.rda")
@@ -134,32 +134,7 @@ ggsave("../figures/Fig3C-wide.svg",
 
 ```
 
-# Tumor Vol over Time - mimic1819 this is now in Figure 4
 
-```{r}
-mimic1819.means %>%
-  ggplot(aes(x = days.from.injection, y = mean)) +
-  geom_line(aes(group = treatment.group,
-                color = Supplement,
-                linetype = Treatment), 
-            lwd = 1) + 
-  geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) + 
-  geom_point(aes(color = Supplement)) +
-  labs(x = "Days from Tumor Injection", 
-       y = expression("Mean Tumor Volume ("~mm^3~")"),
-       color = "Sample") +  
-  theme_bw() +
-  scale_color_manual(
-    values = c("#7570b3", "#d95f02"),
-    labels = c("85 + Blautia", "85")
-  )
-                           
-ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
-       height = 5, width = 7)
-ggsave("../figures/Fig3E.svg", 
-       height = 3, width = 5)
-
-```
 
 # Fraction response - probably needs calculations checked
 
