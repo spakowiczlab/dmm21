@@ -19,7 +19,7 @@ library(viridis)
 ```{r}
 load("../data/figure-data/bardat_Bo_BW.rda")
 load("../data/figure-data/tvol_m10.rda")
-load("../data/figure-data/tvol_m1819.rda")
+
 load("../data/figure-data/fracresponse_blautia-gavage.rda")
 load("../data/figure-data/boxdat_mimic.rda")
 load("../data/figure-data/longmods_mimic-heatmap.rda")
@@ -134,8 +134,8 @@ ggsave("../figures/Fig3C-wide.svg",
 
 ```
 
-# Tumor Vol over Time - mimic1819
 
+<<<<<<< HEAD
 ```{r}
 mimic1819.means <- mimic1819.means %>%
   mutate(Supplement = factor(Supplement, levels = c("Normal", "Blautia")))
@@ -165,6 +165,8 @@ ggsave("../figures/Fig3E.svg",
        height = 3, width = 5)
 
 ```
+=======
+>>>>>>> 901e0c6b3b428e03780ae6958c84fb74127ab4b8
 
 ```{r}
 # Step 1: Filter data for the last day (21 days)
