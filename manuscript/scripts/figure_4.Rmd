@@ -1,0 +1,76 @@
+---
+title: "Figure 4"
+author: "Rebecca Hoyd"
+date: "11/22/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+# Load data
+
+```{r}
+load("../data/figure-data/tvol_m1819.rda")
+```
+
+# Tumor Vol over Time
+
+```{r}
+mimic1819.means$modelres
+```
+
+```{r}
+mimic1819.means$plotdat %>%
+  ggplot(aes(x = days.from.injection, y = mean)) +
+  geom_line(aes(group = treatment.group,
+                color = Supplement,
+                linetype = Treatment), 
+            lwd = 1) + 
+  geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) + 
+  geom_point(aes(color = Supplement)) +
+  labs(x = "Days from Tumor Injection", 
+       y = expression("Mean Tumor Volume ("~mm^3~")"),
+       color = "Sample") +  
+  theme_bw() +
+  scale_color_manual(
+    values = c("#7570b3", "#d95f02"),
+    labels = c("85 + Blautia", "85")
+  )
+                           
+ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
+       height = 5, width = 7)
+ggsave("../figures/Fig3E.svg", 
+       height = 3, width = 5)
+
+```
+
+```{r}
+# Unnest the plotdat data into mimic1819.means
+mimic1819.means <- mimic1819.means$plotdat %>%
+  mutate(Supplement = factor(Supplement, levels = c("Normal", "Blautia")))
+
+# Generate the plot
+mimic1819.means %>%
+  ggplot(aes(x = days.from.injection, y = mean)) +
+  geom_line(aes(group = treatment.group,
+                color = Supplement,
+                linetype = Treatment), 
+            lwd = 1) + 
+  geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) + 
+  geom_point(aes(color = Supplement)) +
+  labs(x = "Days from Tumor Injection", 
+       y = expression("Mean Tumor Volume ("~mm^3~")"),
+       color = "Sample") +  
+  theme_bw() +
+  scale_color_manual(
+    values = c("#d95f02", "#7570b3"),
+    labels = c("85", "85 + Blautia")
+  ) +
+  scale_x_continuous(limits = c(0, max(mimic1819.means$days.from.injection) + 1))
+
+```
+

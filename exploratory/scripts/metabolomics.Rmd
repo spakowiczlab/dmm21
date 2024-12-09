@@ -12,8 +12,6 @@ library(tidyverse)
 library(broom)
 library(readxl)
 library(scales)
-
-
 ```
 
 ```{r}
@@ -139,6 +137,7 @@ print(results_df)
 
 
 ```
+
 ```{r}
 results_df <- results_df %>%
   mutate(padj = p.adjust(p_value, method = "fdr"),
