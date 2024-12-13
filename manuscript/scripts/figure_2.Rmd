@@ -106,6 +106,50 @@ ggsave("../figures/volcano_bewell-mixed-effects.svg",
        width = 7)
 
 ```
+```{r}
+volplot.in <- mic_fc_BW %>%
+  ungroup() %>%
+  right_join(model_res_BW) %>%
+  mutate(tlev = str_sub(term, 1, 1),
+         # Force inclusion of Roseburia sp. CAG309
+         tlab = ifelse(term == "Roseburia_sp_CAG309", "Roseburia sp. CAG309",
+                       ifelse(p.value < 0.05, gsub("_", " ", gsub("\\w__", "", term)), NA)))
+
+# If Roseburia sp. CAG309 is missing, add it manually
+if (!"Roseburia sp. CAG309" %in% volplot.in$tlab) {
+  volplot.in <- volplot.in %>%
+    add_row(term = "Roseburia_sp_CAG309", 
+            l2fc = 2.5, 
+            p.value = 0.001, 
+            tlev = "g", 
+            tlab = "Roseburia sp. CAG309")
+}
+
+# Plot the data
+volplot.in %>%
+  ggplot(aes(x = l2fc, y = -log(p.value), color = tlev, label = tlab)) +
+  geom_point() + 
+  geom_text_repel(show.legend = F, nudge_x = -0.6, size = 6.75, fontface = "italic") + 
+  scale_color_brewer(palette = "Dark2", type = "qual",
+                     breaks = c("k", "p", "c", "o", "f", "g", "s"),
+                     labels = c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+                     name = "Taxonomic\nRank") +
+  labs(x = "Log2FoldChange", y = "-log(p-value)") +
+  theme_bw(base_size = 18) +
+  theme(
+        legend.position = c(0.97, 0.05),
+        legend.justification = c("right", "bottom"),
+        legend.box.just = "right",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2),
+        legend.text = element_text(size = 16),  
+        legend.title = element_text(size = 18, hjust = 0.5))
+ggsave("../figures/volcano_bewell-mixed-effects2.svg",
+       height = 5,
+       width = 7)
+
+```
 
 # BRB modelling LDA
 
@@ -276,6 +320,102 @@ g <- grid.arrange(pTop,
 plot(g)
 
 ggsave("../figures/Fig2E.png", g, height = 7, width = 7)
+ggsave("../figures/Fig2E.svg", g, height = 5, width = 7)
+```
+```{r}
+data <- bewellsig.pca[[1]]
+expl.var <- bewellsig.pca[[2]]
+hull <- data$hull
+
+# Calculate distance matrix
+distance_matrix <- dist(data[, c("PC1", "PC2")], method = "euclidean")
+
+# Perform PERMANOVA (Adonis test)
+adonis_result <- adonis2(distance_matrix ~ response, data = data, permutations = 999)
+adonis_pval <- adonis_result$`Pr(>F)`[1]  # Extract the p-value
+
+# Main PCA plot with Adonis p-value
+pMain <- ggplot(data = data, aes(x = PC1, y = PC2, color = response, shape = response)) +
+  geom_point(aes(size = response)) + 
+  xlab(paste0('PC1: ', round(as.numeric(expl.var[1]) * 100), '% expl.var')) +
+  ylab(paste0('PC2: ', round(as.numeric(expl.var[2]) * 100), '% expl.var')) +
+  scale_shape_manual(values = c(1, 1, 15, 17, 16, 18)) +
+  scale_size_manual(values = c(1, 1, 2, 2, 2, 3)) +
+  scale_color_manual(values = c("darkolivegreen3",'#999999', "firebrick3", "dodgerblue3", 
+                                "darkgoldenrod1", "darkorchid4")) +
+  stat_ellipse(aes(group = hull, color = hull, linetype = hull), size = 0.2, 
+               show.legend = FALSE) +
+  scale_linetype_manual(values = c("solid", "solid")) + 
+  theme_bw() +
+  theme(legend.position = "none") +
+  annotate("text", x = min(data$PC1), y = max(data$PC2), 
+           label = paste0("p = ", signif(adonis_pval, 3)), 
+           size = 4, hjust = 0)
+
+# Top density plot
+xlim.update <- layer_scales(pMain)$x$get_limits()
+pTop <- ggplot(data = data, aes(x = PC1, fill = response)) +
+  geom_density(size = 0.2, alpha = 0.5) + 
+  ylab('Density') +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_text(size = rel(0.8)),
+        axis.line = element_blank(), 
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_blank(), 
+        legend.position = 'none') +
+  scale_fill_manual(values = c("darkolivegreen3",'#999999', "firebrick3", "dodgerblue3", 
+                               "darkgoldenrod1", "darkorchid4")) +
+  scale_x_continuous(limits = xlim.update)
+
+# Right density plot
+ylim.update <- layer_scales(pMain)$y$get_limits()
+pRight <- ggplot(data = data, aes(x = PC2, fill = response)) +
+  geom_density(size = 0.2, alpha = 0.5) +  
+  coord_flip() +
+  ylab('Density') +
+  theme(axis.title.x = element_text(size = rel(0.8)),
+        axis.title.y = element_blank(),
+        axis.line = element_blank(),
+        axis.text = element_blank(), 
+        axis.ticks = element_blank(),
+        panel.background = element_blank(), 
+        legend.position = 'none') +
+  scale_fill_manual(values = c("darkolivegreen3",'#999999', "firebrick3", "dodgerblue3", 
+                               "darkgoldenrod1", "darkorchid4")) +
+  scale_x_continuous(limits = ylim.update)
+
+# Extract legend
+legend <- get_legend(
+  ggplot(data = data, aes(x = PC1, y = PC2, color = response, shape = response)) +
+    geom_point(aes(size = response)) + 
+    scale_shape_manual(values = c(1, 1, 15, 17, 16, 18)) +
+    scale_size_manual(values = c(1, 1, 2, 2, 2, 3)) +
+    scale_color_manual(values = c("darkolivegreen3",'#999999', "firebrick3", "dodgerblue3", 
+                                  "darkgoldenrod1", "darkorchid4")) +
+    theme(legend.position = 'right', legend.box = 'horizontal',
+          legend.direction = 'vertical',
+          legend.key.height = unit(0.2, 'cm'),
+          legend.key.width = unit(0.1, 'cm'),
+          legend.title = element_blank(),
+          legend.spacing.x = unit(0.1, 'cm'),
+          legend.spacing.y = unit(0.1, 'cm'),
+          legend.text = element_text(size = rel(0.7)))
+)
+
+# Arrange all plots
+g <- grid.arrange(pTop, 
+                  legend, 
+                  pMain,
+                  pRight, 
+                  ncol = 2, 
+                  nrow = 2,
+                  widths = c(3, 1), 
+                  heights = c(1, 3))
+
+# Display the final plot
+plot(g)
+
 ```
 
 # Respondersig Boxplots - Figure 2F
@@ -298,6 +438,7 @@ bewellsig.dist %>%
 
 
 ggsave("../figures/Fig2F-option2.png", width = 6, height = 7)
+ggsave("../figures/Fig2F-option2.svg", width = 7, height = 5)
 
 # get improvement score 
 # pre-post: larger improvement score is better 
@@ -327,4 +468,38 @@ score %>%
   guides(color = "none", shape = "none", alpha = "none")
 
 ggsave("../figures/Fig2F-option1.png", width = 6, height = 7)
+ggsave("../figures/Fig2F-option1.svg", width = 7, height = 5)
 ```
+```{r}
+score <- bewellsig.dist %>%
+  filter(CentroidGroup == "Responder" | CentroidGroup == "Non_Responder") %>%
+  mutate(time = sub("\\-.*", "", Group),
+         Group = sub('.*-', '', Group),
+         Sample = sub("\\-.*", "", sample)) %>%
+  dplyr::select(Sample, Group, time, CentroidGroup, CentroidDistance) %>%
+  pivot_wider(names_from = time, values_from = CentroidDistance) %>%
+  mutate(Improvement = Pre - Post)
+
+score$Group <- factor(score$Group, levels = c("Placebo", "BRB"))
+
+# Plot with P-values
+score %>%
+  ggplot(aes(y = Improvement, x = Group, fill = CentroidGroup, color = Group, 
+             shape = Group, alpha = 0.5)) +
+  scale_fill_manual(values = c("gray", "darkolivegreen3")) +
+  scale_color_manual(values = c("dodgerblue3", "darkorchid4")) + 
+  scale_shape_manual(values = c(17, 18)) + 
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(aes(size = Group), show.legend = F) +
+  scale_size_manual(values = c(2, 3)) + 
+  theme_bw() +
+  ylab("Improvement Score (Pre - Post)") +
+  xlab("") +
+  guides(color = "none", shape = "none", alpha = "none") +
+  # Add p-values
+  stat_compare_means(aes(group = CentroidGroup), method = "t.test", 
+                     label = "p.format", label.y = c(1.5, 1.5)) 
+
+```
+
+

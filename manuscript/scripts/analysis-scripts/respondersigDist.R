@@ -34,3 +34,4 @@ respondersigDist <- function(x, meta){
   return(c.dist)
   
 }
+

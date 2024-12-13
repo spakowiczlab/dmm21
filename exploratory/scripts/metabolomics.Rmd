@@ -261,6 +261,7 @@ significant_results <- results_df1 %>%
 print(significant_results)
 
 ```
+
 ```{r}
 results_df1 <- results_df1 %>%
   mutate(padj = p.adjust(p_value, method = "fdr"),
@@ -276,6 +277,7 @@ ggplot(results_df1, aes(x = estimate, y = neg_log_padj)) +
 
 
 ```
+
 ```{r}
 model_df1 <- model_df1 %>%
   mutate(microbiome.sample = factor(microbiome.sample, 
@@ -313,7 +315,6 @@ ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], f
 ```
 
 ```{r}
-
 scientific_no_plus <- function(x) {
   ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
 }
@@ -336,25 +337,25 @@ for (molecule in selected_molecules_feces) {
   print(plot_molecule(molecule))
 }
 
-ggsave("../figures/DL-Tryptophan.svg",
+ggsave("../figures/DL-Tryptophan_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/N-Acetyl-DL-tryptophan.svg",
+ggsave("../figures/N-Acetyl-DL-tryptophan_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/Inosine.svg",
+ggsave("../figures/Inosine_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/Deoxyinosine.svg",
+ggsave("../figures/Deoxyinosine_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/trans-3-Indoleacrylic acid.svg",
+ggsave("../figures/trans-3-Indoleacrylic acid_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/Dihydroxyindole.svg",
+ggsave("../figures/Dihydroxyindole_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/Indole-2-carboxylic acid.svg",
+ggsave("../figures/Indole-2-carboxylic acid_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/5-Hydroxyindole-3-acetic acid.svg",
+ggsave("../figures/5-Hydroxyindole-3-acetic acid_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/5-Methoxy-3-indoleaceate.svg",
+ggsave("../figures/5-Methoxy-3-indoleaceate_feces.svg",
        height = 3, width = 5)
-ggsave("../figures/Ethyl 3-Indoleacetate.svg",
+ggsave("../figures/Ethyl 3-Indoleacetate_feces.svg",
        height = 3, width = 5)
 ```
 
@@ -409,6 +410,7 @@ significant_results2 <- results_df2 %>%
 print(significant_results2)
 
 ```
+
 ```{r}
 results_df2 <- results_df2 %>%
   mutate(padj = p.adjust(p_value, method = "fdr"),
@@ -447,6 +449,7 @@ ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], f
   theme(legend.position = "none")
 
 ```
+
 ```{r}
 scientific_no_plus <- function(x) {
   ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
