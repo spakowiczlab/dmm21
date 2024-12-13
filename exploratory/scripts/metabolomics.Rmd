@@ -337,26 +337,10 @@ for (molecule in selected_molecules_feces) {
   print(plot_molecule(molecule))
 }
 
-ggsave("../figures/DL-Tryptophan_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/N-Acetyl-DL-tryptophan_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/Inosine_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/Deoxyinosine_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/trans-3-Indoleacrylic acid_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/Dihydroxyindole_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/Indole-2-carboxylic acid_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/5-Hydroxyindole-3-acetic acid_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/5-Methoxy-3-indoleaceate_feces.svg",
-       height = 3, width = 5)
-ggsave("../figures/Ethyl 3-Indoleacetate_feces.svg",
-       height = 3, width = 5)
+for (molecule in selected_molecules_feces) {
+  p <- plot_molecule(molecule)
+  ggsave(paste0("../figures/", gsub(" ", "_", molecule), "_feces.svg"), plot = p, height = 3, width = 5)
+}
 ```
 
 ```{r}
@@ -473,16 +457,10 @@ for (molecule in selected_molecules_blood) {
   print(plot_molecule(molecule))
 }
 
-ggsave("../figures/Blood-DL-Tryptophan.svg",
-       height = 3, width = 5)
-ggsave("../figures/Blood-L-Tryptophan.svg",
-       height = 3, width = 5)
-ggsave("../figures/Blood-Inosine.svg",
-       height = 3, width = 5)
-ggsave("../figures/Blood-Dihydroxyindole.svg",
-       height = 3, width = 5)
-ggsave("../figures/Blood-trans-3-Indoleacrylic acid.svg",
-       height = 3, width = 5)
+for (molecule in selected_molecules_blood) {
+  p <- plot_molecule(molecule)
+  ggsave(paste0("../figures/Blood-", gsub(" ", "-", molecule), ".svg"), plot = p, height = 3, width = 5)
+}
 ```
 
 ```{r}
