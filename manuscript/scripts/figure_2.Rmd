@@ -323,6 +323,26 @@ ggsave("../figures/Fig2E.png", g, height = 7, width = 7)
 ggsave("../figures/Fig2E.svg", g, height = 5, width = 7)
 ```
 ```{r}
+# Assuming bewellsig.pca[[1]] is your data
+data <- bewellsig.pca[[1]]
+
+# Convert data to matrix (remove any non-numeric columns like factor variables)
+data_matrix <- data[, sapply(data, is.numeric)] %>% as.matrix()
+
+# Compute Bray-Curtis dissimilarity matrix using vegdist
+distance_matrix <- vegan::vegdist(data_matrix, method = "bray")
+
+# You can then apply this distance matrix to further analysis, e.g., adonis
+# If you want to run adonis, make sure you have a grouping variable for 'response' in your data
+# Assuming 'response' is a factor variable in your dataset
+adonis_result <- adonis2(distance_matrix ~ response, data = data)
+
+# Now you can visualize or interpret the adonis result
+print(adonis_result)
+
+```
+
+```{r}
 data <- bewellsig.pca[[1]]
 expl.var <- bewellsig.pca[[2]]
 hull <- data$hull
@@ -463,43 +483,13 @@ score %>%
   geom_jitter(aes(size = Group), show.legend = F) +
   scale_size_manual(values = c(2, 3)) + 
   theme_bw() +
-  ylab("Improvement Score (Pre - Post)") +
+  ylab("Change in Distance to Centroid (Pre-Post)") +
   xlab("") +
-  guides(color = "none", shape = "none", alpha = "none")
+  guides(color = "none", shape = "none", alpha = "none") +
+  coord_cartesian(xlim = c(-0.1, 2.5))  # Adjust the x-axis range to add more space on the left
 
 ggsave("../figures/Fig2F-option1.png", width = 6, height = 7)
 ggsave("../figures/Fig2F-option1.svg", width = 7, height = 5)
-```
-```{r}
-score <- bewellsig.dist %>%
-  filter(CentroidGroup == "Responder" | CentroidGroup == "Non_Responder") %>%
-  mutate(time = sub("\\-.*", "", Group),
-         Group = sub('.*-', '', Group),
-         Sample = sub("\\-.*", "", sample)) %>%
-  dplyr::select(Sample, Group, time, CentroidGroup, CentroidDistance) %>%
-  pivot_wider(names_from = time, values_from = CentroidDistance) %>%
-  mutate(Improvement = Pre - Post)
-
-score$Group <- factor(score$Group, levels = c("Placebo", "BRB"))
-
-# Plot with P-values
-score %>%
-  ggplot(aes(y = Improvement, x = Group, fill = CentroidGroup, color = Group, 
-             shape = Group, alpha = 0.5)) +
-  scale_fill_manual(values = c("gray", "darkolivegreen3")) +
-  scale_color_manual(values = c("dodgerblue3", "darkorchid4")) + 
-  scale_shape_manual(values = c(17, 18)) + 
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(aes(size = Group), show.legend = F) +
-  scale_size_manual(values = c(2, 3)) + 
-  theme_bw() +
-  ylab("Improvement Score (Pre - Post)") +
-  xlab("") +
-  guides(color = "none", shape = "none", alpha = "none") +
-  # Add p-values
-  stat_compare_means(aes(group = CentroidGroup), method = "t.test", 
-                     label = "p.format", label.y = c(1.5, 1.5)) 
-
 ```
 
 

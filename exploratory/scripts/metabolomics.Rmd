@@ -53,8 +53,12 @@ long_data <- normalized_cleaned_data %>%
                         `isovaleric acid`, `propionic acid`, 
                         `valeric acid`, `heptanoic acid`, `2-methylbutyric acid`),
                names_to = "variable", values_to = "value")
+long_no_pbs <- 
+  long_data %>% 
+  filter(microbiome.sample != "PBS")
 
-ggplot(long_data, aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
+long_no_pbs %>% 
+ggplot(aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.6) +  
   geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
   facet_wrap(~ variable, scales = "free_y", ncol = 5) +
@@ -64,7 +68,7 @@ ggplot(long_data, aes(x = microbiome.sample, y = log(value), fill = microbiome.s
   theme(legend.position = "none",  
         strip.text = element_text(size = 10),  
         axis.text.x = element_text(angle = 55, hjust = 1)) +  
-  scale_fill_brewer(palette = "Dark2") 
+  scale_fill_brewer(palette = "Paired", direction = -1)
 
 ggsave("../figures/SCFA-plot.png", width = 10, height = 8)
 ggsave("../figures/SCFA-plot.svg", width = 8, height = 5)
@@ -106,7 +110,9 @@ scfas <- c("acetic.acid", "butyric.acid", "caproic.acid",
            "valeric.acid", "heptanoic.acid", "X2.methylbutyric.acid")
 
 model_df <- normalized_cleaned_data %>%
-  mutate(Blautia=if_else(grepl("Blautia", microbiome.sample),true= 1, false= 0))
+  mutate(Blautia=if_else(grepl("Blautia", microbiome.sample),true= 1, false= 0)) %>% 
+    filter(microbiome.sample != "PBS")
+
 
 lm0 <- glm(Blautia ~ `acetic acid`, data = model_df, family="binomial") 
 summary(lm0)
