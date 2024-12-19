@@ -322,22 +322,18 @@ plot(g)
 ggsave("../figures/Fig2E.png", g, height = 7, width = 7)
 ggsave("../figures/Fig2E.svg", g, height = 5, width = 7)
 ```
+
 ```{r}
-# Assuming bewellsig.pca[[1]] is your data
 data <- bewellsig.pca[[1]]
 
-# Convert data to matrix (remove any non-numeric columns like factor variables)
+# Convert data to matrix
 data_matrix <- data[, sapply(data, is.numeric)] %>% as.matrix()
 
 # Compute Bray-Curtis dissimilarity matrix using vegdist
 distance_matrix <- vegan::vegdist(data_matrix, method = "bray")
 
-# You can then apply this distance matrix to further analysis, e.g., adonis
-# If you want to run adonis, make sure you have a grouping variable for 'response' in your data
-# Assuming 'response' is a factor variable in your dataset
 adonis_result <- adonis2(distance_matrix ~ response, data = data)
 
-# Now you can visualize or interpret the adonis result
 print(adonis_result)
 
 ```
