@@ -75,7 +75,11 @@ volplot.in %>%
   theme_bw()
 
 ggsave("../figures/volcano_bewell-mixed-effects.svg")
+
+write_csv(model_res_BW, 
+          "../tables/Supp-Table-S2_bewell-volcano.csv")
 ```
+
 ```{r}
 volplot.in <- mic_fc_BW %>%
   ungroup() %>%

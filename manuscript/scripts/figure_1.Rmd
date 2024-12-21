@@ -113,6 +113,9 @@ rber.desres %>%
 ggsave("../figures/Fig1C.volcano.svg",
        height = 5,
        width = 7)
+
+write_csv(rber.desres, 
+          "../tables/Supp-Table-S1_rat-volcano.csv")
 ```
 # LDA
 

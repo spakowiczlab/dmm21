@@ -96,6 +96,7 @@ ggsave("../figures/Fig3C-wide.svg",
        height = 3.5, width =9)
 
 ```
+
 ```{r}
 mimic10.means %>%
   mutate(Gavage = if_else(grepl("v1", treatment.group),
@@ -135,7 +136,6 @@ ggsave("../figures/Fig3C-wide.svg",
 ```
 
 
-<<<<<<< HEAD
 ```{r}
 mimic1819.means <- mimic1819.means %>%
   mutate(Supplement = factor(Supplement, levels = c("Normal", "Blautia")))
@@ -165,8 +165,7 @@ ggsave("../figures/Fig3E.svg",
        height = 3, width = 5)
 
 ```
-=======
->>>>>>> 901e0c6b3b428e03780ae6958c84fb74127ab4b8
+
 
 ```{r}
 # Step 1: Filter data for the last day (21 days)
@@ -303,6 +302,9 @@ ggsave("../figures/bewell_heatmap_interaction.png",
        height =  6, width = 6)
 ggsave("../figures/Fig3D.svg",
        height =  3, width = 6)
+
+write_csv(mimic.longmods, 
+          "../tables/Supp-Table-S4_model-summary-values.csv")
 ```
 
 ```{r}
