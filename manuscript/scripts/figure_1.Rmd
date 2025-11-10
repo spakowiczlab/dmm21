@@ -7,7 +7,6 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
 library(tidyverse)
 library(ggtext)
 library(ggfortify)
@@ -117,6 +116,90 @@ ggsave("../figures/Fig1C.volcano.svg",
 write_csv(rber.desres, 
           "../tables/Supp-Table-S1_rat-volcano.csv")
 ```
+```{r}
+# Define target genera for labeling
+target_genera <- c("Akkermansia", "Bifidobacterium", "Lactobacillus", 
+                   "Bacillus", "Enterococcus", "Ruminiclostridium_5", 
+                   "Lachnospiraceae_NC2004_group", "Blautia")
+
+rber.desres %>%
+  mutate(label_this = ifelse(Taxa %in% target_genera & TaxLev == "Genus", 
+                             str_replace(Taxa, "_", " "), NA)) %>%
+  ggplot(aes(x = log2FoldChange, 
+             y = -log(padj), 
+             color = TaxLev, 
+             label = label_this)) +
+  geom_point() + 
+  geom_text_repel(na.rm = TRUE, show.legend = FALSE, size = 6.25) +
+  geom_hline(yintercept = -log(0.05), color = "red", linetype = "dotted", linewidth = 0.75) +
+  geom_vline(xintercept = c(-4, 4), color = "red", linetype = "dotted", linewidth = 0.75) +
+  scale_color_brewer(palette = "Dark2", na.value = "gray50",
+                     breaks = c("Phylum", "Class", "Order", "Family", "Genus"),
+                     name = "Taxonomic\nRank") +
+  theme_bw(base_size = 20) +
+  theme(legend.position = c(0.97, 0.05),
+        legend.justification = c("right", "bottom"),
+        legend.box.just = "right",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2),
+        legend.text = element_text(size = 16),  
+        legend.title = element_text(size = 18, hjust = 0.5),
+        legend.key.width = unit(0.1, "cm")) +
+  xlim(-8, 8) +
+  labs(x = "log2FoldChange", y = "-log(padj)")
+
+
+```
+
+```{r}
+target_genera <- c("Akkermansia", "Bifidobacterium", "Lactobacillus", 
+                   "Bacillus", "Enterococcus", "Ruminiclostridium_5", 
+                   "Blautia")
+
+rber.desres %>%
+  mutate(label_this = ifelse(Taxa %in% target_genera & TaxLev == "Genus",
+                             str_replace(Taxa, "_", " "), NA)) %>%
+  ggplot(aes(x = log2FoldChange, 
+             y = -log(padj), 
+             color = log2FoldChange, 
+             label = label_this)) +
+  geom_point() +
+  geom_text_repel(na.rm = TRUE, show.legend = FALSE, size = 6.25) +
+  scale_color_viridis_c(option = "D", name = "log2FC") +  
+  geom_hline(yintercept = -log(0.05), color = "red", linetype = "dotted", linewidth = 0.75) +
+  geom_vline(xintercept = c(-4, 4), color = "red", linetype = "dotted", linewidth = 0.75) +
+  coord_cartesian(xlim = c(-8, 8)) +
+  theme_bw(base_size = 20) +
+  theme(
+    legend.position = "right",
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12)
+  )
+ggsave("../figures/Fig1C.volcano.PIRMs.svg",
+       height = 5,
+       width = 7)
+ggsave("../figures/Fig1C.volcano.PIRMs.png",
+       height = 5,
+       width = 7)
+```
+
+
+```{r}
+rber.desres %>%
+  mutate(label_this = ifelse(Taxa %in% target_genera & TaxLev == "Genus", str_replace(Taxa, "_", " "), NA),
+         highlight = ifelse(Taxa %in% target_genera & TaxLev == "Genus", "Target Genus", "Other")) %>%
+  ggplot(aes(x = log2FoldChange, y = -log(padj), color = highlight, label = label_this)) +
+  geom_point() +
+  geom_text_repel(na.rm = TRUE, show.legend = FALSE, size = 6.25) +
+  scale_color_manual(values = c("Target Genus" = "darkred", "Other" = "gray60")) +
+  guides(color = FALSE) +
+  geom_hline(yintercept = -log(0.05), color = "red", linetype = "dotted") +
+  geom_vline(xintercept = c(-4, 4), color = "red", linetype = "dotted") +
+  theme_bw(base_size = 20)
+
+```
+
 # LDA
 
 ```{r}

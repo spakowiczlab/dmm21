@@ -1,0 +1,177 @@
+K00005	glycerol dehydrogenase [EC:1.1.1.6]
+K00012	UDPglucose 6-dehydrogenase [EC:1.1.1.22]
+K00067	dTDP-4-dehydrorhamnose reductase [EC:1.1.1.133]
+K00077	2-dehydropantoate 2-reductase [EC:1.1.1.169]
+K00194	acetyl-CoA decarbonylase/synthase, CODH/ACS complex subunit delta [EC:2.1.1.245]
+K00197	acetyl-CoA decarbonylase/synthase, CODH/ACS complex subunit gamma [EC:2.1.1.245]
+K00198	anaerobic carbon-monoxide dehydrogenase catalytic subunit [EC:1.2.7.4]
+K00297	methylenetetrahydrofolate reductase (NADH) [EC:1.5.1.54]
+K00334	NADH-quinone oxidoreductase subunit E [EC:7.1.1.2]
+K00335	NADH-quinone oxidoreductase subunit F [EC:7.1.1.2]
+K00384	thioredoxin reductase (NADPH) [EC:1.8.1.9]
+K00796	dihydropteroate synthase [EC:2.5.1.15]
+K00798	cob(I)alamin adenosyltransferase [EC:2.5.1.17]
+K00848	rhamnulokinase [EC:2.7.1.5]
+K00917	tagatose 6-phosphate kinase [EC:2.7.1.144]
+K00928	aspartate kinase [EC:2.7.2.4]
+K00950	2-amino-4-hydroxy-6-hydroxymethyldihydropteridine diphosphokinase [EC:2.7.6.3]
+K00973	glucose-1-phosphate thymidylyltransferase [EC:2.7.7.24]
+K01000	phospho-N-acetylmuramoyl-pentapeptide-transferase [EC:2.7.8.13]
+K01104	protein-tyrosine phosphatase [EC:3.1.3.48]
+K01182	oligo-1,6-glucosidase [EC:3.2.1.10]
+K01206	alpha-L-fucosidase [EC:3.2.1.51]
+K01480	agmatinase [EC:3.5.3.11]
+K01486	adenine deaminase [EC:3.5.4.2]
+K01495	GTP cyclohydrolase IA [EC:3.5.4.16]
+K01496	phosphoribosyl-AMP cyclohydrolase [EC:3.5.4.19]
+K01500	methenyltetrahydrofolate cyclohydrolase [EC:3.5.4.9]
+K01524	exopolyphosphatase / guanosine-5'-triphosphate,3'-diphosphate pyrophosphatase [EC:3.6.1.11 3.6.1.40]
+K01537	P-type Ca2+ transporter type 2C [EC:7.2.2.10]
+K01567	peptidoglycan-N-acetylmuramic acid deacetylase [EC:3.5.1.-]
+K01628	L-fuculose-phosphate aldolase [EC:4.1.2.17]
+K01633	7,8-dihydroneopterin aldolase/epimerase/oxygenase [EC:4.1.2.25 5.1.99.8 1.13.11.81]
+K01665	para-aminobenzoate synthetase component I [EC:2.6.1.85]
+K01698	porphobilinogen synthase [EC:4.2.1.24]
+K01699	propanediol dehydratase large subunit [EC:4.2.1.28]
+K01710	dTDP-glucose 4,6-dehydratase [EC:4.2.1.46]
+K01752	L-serine dehydratase [EC:4.3.1.17]
+K01759	lactoylglutathione lyase [EC:4.4.1.5]
+K01790	dTDP-4-dehydrorhamnose 3,5-epimerase [EC:5.1.3.13]
+K01804	L-arabinose isomerase [EC:5.3.1.4]
+K01818	L-fucose/D-arabinose isomerase [EC:5.3.1.25 5.3.1.3]
+K01845	glutamate-1-semialdehyde 2,1-aminomutase [EC:5.4.3.8]
+K01961	acetyl-CoA carboxylase, biotin carboxylase subunit [EC:6.4.1.2 6.3.4.14]
+K01995	branched-chain amino acid transport system ATP-binding protein
+K01996	branched-chain amino acid transport system ATP-binding protein
+K01997	branched-chain amino acid transport system permease protein
+K01998	branched-chain amino acid transport system permease protein
+K01999	branched-chain amino acid transport system substrate-binding protein
+K02010	iron(III) transport system ATP-binding protein [EC:7.2.2.7]
+K02019	molybdate transport system regulatory protein
+K02050	NitT/TauT family transport system permease protein
+K02052	putative spermidine/putrescine transport system ATP-binding protein
+K02053	putative spermidine/putrescine transport system permease protein
+K02054	putative spermidine/putrescine transport system permease protein
+K02056	simple sugar transport system ATP-binding protein [EC:7.5.2.-]
+K02117	V/A-type H+/Na+-transporting ATPase subunit A [EC:7.1.2.2 7.2.2.1]
+K02118	V/A-type H+/Na+-transporting ATPase subunit B
+K02119	V/A-type H+/Na+-transporting ATPase subunit C
+K02120	V/A-type H+/Na+-transporting ATPase subunit D
+K02122	V/A-type H+/Na+-transporting ATPase subunit F
+K02123	V/A-type H+/Na+-transporting ATPase subunit I
+K02124	V/A-type H+/Na+-transporting ATPase subunit K
+K02160	acetyl-CoA carboxylase biotin carboxyl carrier protein
+K02431	L-fucose mutarotase [EC:5.1.3.29]
+K02443	glycerol uptake operon antiterminator
+K02492	glutamyl-tRNA reductase [EC:1.2.1.70]
+K02588	nitrogenase iron protein NifH
+K02598	nitrite transporter
+K02805	dTDP-4-amino-4,6-dideoxygalactose transaminase [EC:2.6.1.59]
+K02897	large subunit ribosomal protein L25
+K03087	RNA polymerase nonessential primary-like sigma factor
+K03299	gluconate:H+ symporter, GntP family
+K03340	diaminopimelate dehydrogenase [EC:1.4.1.16]
+K03484	LacI family transcriptional regulator, sucrose operon repressor
+K03534	L-rhamnose mutarotase [EC:5.1.3.32]
+K03546	DNA repair protein SbcC/Rad50
+K03575	A/G-specific adenine glycosylase [EC:3.2.2.31]
+K03743	nicotinamide-nucleotide amidase [EC:3.5.1.42]
+K03768	peptidyl-prolyl cis-trans isomerase B (cyclophilin B) [EC:5.2.1.8]
+K03778	D-lactate dehydrogenase [EC:1.1.1.28]
+K03826	putative acetyltransferase [EC:2.3.1.-]
+K04024	ethanolamine utilization protein EutJ
+K04029	ethanolamine utilization protein EutP
+K04031	ethanolamine utilization protein EutS
+K04072	acetaldehyde dehydrogenase / alcohol dehydrogenase [EC:1.2.1.10 1.1.1.1]
+K04653	hydrogenase expression/formation protein HypC
+K04654	hydrogenase expression/formation protein HypD
+K04656	hydrogenase maturation protein HypF
+K04763	integrase/recombinase XerD
+K05341	amylosucrase [EC:2.4.1.4]
+K05350	beta-glucosidase [EC:3.2.1.21]
+K05919	superoxide reductase [EC:1.15.1.2]
+K05989	alpha-L-rhamnosidase [EC:3.2.1.40]
+K06221	2,5-diketo-D-gluconate reductase A [EC:1.1.1.346]
+K06333	spore coat protein JB
+K06383	stage II sporulation protein GA (sporulation sigma-E factor processing peptidase) [EC:3.4.23.-]
+K06384	stage II sporulation protein M
+K06391	stage III sporulation protein AB
+K06395	stage III sporulation protein AF
+K06438	similar to stage IV sporulation protein
+K06864	cysteine-dependent pyridinium-3,5-bisthiocarboxylic acid mononucleotide synthase [EC:4.4.1.37 4.4.1.45]
+K06898	pyridinium-3,5-biscarboxylic acid mononucleotide synthase [EC:2.5.1.143]
+K06940	uncharacterized protein
+K06952	5'-nucleotidase [EC:3.1.3.89]
+K06956	uncharacterized protein
+K06987	uncharacterized protein
+K07009	lipid II isoglutaminyl synthase (glutamine-hydrolysing) [EC:6.3.5.13]
+K07027	glycosyltransferase 2 family protein
+K07035	uncharacterized protein
+K07079	uncharacterized protein
+K07138	uncharacterized protein
+K07321	CO dehydrogenase maturation factor
+K07340	inner membrane protein
+K07404	6-phosphogluconolactonase [EC:3.1.1.31]
+K07448	restriction system protein
+K07487	transposase
+K07491	REP-associated tyrosine transposase
+K07646	two-component system, OmpR family, sensor histidine kinase KdpD [EC:2.7.13.3]
+K07667	two-component system, OmpR family, KDP operon response regulator KdpE
+K07862	serine/threonine transporter
+K08281	nicotinamidase/pyrazinamidase [EC:3.5.1.19 3.5.1.-]
+K08302	tagatose 1,6-diphosphate aldolase GatY/KbaY [EC:4.1.2.40]
+K09121	pyridinium-3,5-bisthiocarboxylic acid mononucleotide nickel chelatase [EC:4.99.1.12]
+K09132	uncharacterized protein
+K09691	homopolymeric O-antigen transport system ATP-binding protein [EC:7.5.2.14]
+K09692	teichoic acid transport system permease protein
+K09693	teichoic acid transport system ATP-binding protein [EC:7.5.2.4]
+K09702	uncharacterized protein
+K09706	uncharacterized protein
+K09777	extracellular matrix regulatory protein A
+K09779	uncharacterized protein
+K09815	zinc transport system substrate-binding protein
+K09936	bacterial/archaeal transporter family-2 protein
+K10254	oleate hydratase [EC:4.2.1.53]
+K10439	ribose transport system substrate-binding protein
+K10441	ribose transport system ATP-binding protein [EC:7.5.2.7]
+K10543	D-xylose transport system substrate-binding protein
+K10546	putative multiple sugar transport system substrate-binding protein
+K10547	putative multiple sugar transport system permease protein
+K10548	putative multiple sugar transport system ATP-binding protein [EC:7.5.2.-]
+K11184	catabolite repression HPr-like protein
+K11214	sedoheptulokinase [EC:2.7.1.14]
+K12510	tight adherence protein B
+K12511	tight adherence protein C
+K13566	omega-amidase [EC:3.5.1.3]
+K13922	propionaldehyde dehydrogenase [EC:1.2.1.87]
+K13940	dihydroneopterin aldolase / 2-amino-4-hydroxy-6-hydroxymethyldihydropteridine diphosphokinase [EC:4.1.2.25 2.7.6.3]
+K14138	acetyl-CoA synthase [EC:2.3.1.169]
+K15023	5-methyltetrahydrofolate corrinoid/iron sulfur protein methyltransferase [EC:2.1.1.258]
+K15024	putative phosphotransacetylase [EC:2.3.1.8]
+K15460	tRNA1Val (adenine37-N6)-methyltransferase [EC:2.1.1.223]
+K15923	alpha-L-fucosidase 2 [EC:3.2.1.51]
+K15984	16S rRNA (guanine1516-N2)-methyltransferase [EC:2.1.1.242]
+K16789	thiamine transporter
+K16870	N-acetylglucosaminyl-diphospho-decaprenol L-rhamnosyltransferase [EC:2.4.1.289]
+K17103	CDP-diacylglycerol---serine O-phosphatidyltransferase [EC:2.7.8.8]
+K17836	beta-lactamase class A [EC:3.5.2.6]
+K18640	plasmid segregation protein ParM
+K19221	cob(I)alamin adenosyltransferase [EC:2.5.1.17]
+K19334	biofilm protein TabA
+K21467	penicillin-binding protein 3
+K22391	GTP cyclohydrolase I [EC:3.5.4.16]
+K22476	N-acetylglutamate synthase [EC:2.3.1.1]
+K22522	cytokinin riboside 5'-monophosphate phosphoribohydrolase [EC:3.2.2.-]
+K22605	3alpha-hydroxycholanate dehydrogenase (NADP+) [EC:1.1.1.392]
+K23060	arginine/lysine/histidine transport system ATP-binding protein [EC:7.4.2.1]
+K23163	sulfate/thiosulfate transport system substrate-binding protein
+K23393	lipid II isoglutaminyl synthase (glutamine-hydrolysing) [EC:6.3.5.13]
+K25007	methylenetetrahydrofolate reductase (NADH) small subunit
+K25008	ion-translocating oxidoreductase complex subunit C [EC:7.-.-.-]
+K25142	linearmycin/streptolysin S transport system permease protein
+K25144	linearmycin/streptolysin S transport system ATP-binding protein
+K27264	propanediol dehydratase-reactivating factor large subunit
+K27265	propanediol dehydratase-reactivating factor small subunit
+K27270	corrinoid adenosyltransferase [EC:2.5.1.-]
+K27271	cobalamin reductase
+K27272	bacterial microcompartment shell protein
