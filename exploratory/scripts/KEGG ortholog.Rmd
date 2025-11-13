@@ -1,0 +1,298 @@
+---
+title: "KEGG ortholog"
+author: "Shiva Jahanbakhshi"
+date: "2025-11-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(UpSetR)
+library(tidyverse)
+
+bo <- B_obeum_KOs[[1]]
+bm <- B_massiliensis_KOs[[1]]
+ar <- A_rectalis_KOs[[1]]
+length(bo); length(bm); length(ar)
+
+```
+
+```{r}
+pdf("UpSet_KOs.pdf", width=7, height=5)
+
+upset(
+  fromList(list(
+    `B. obeum` = bo,
+    `B. massiliensis` = bm,
+    `A. rectalis` = ar
+  )),
+  nsets = 3,
+  sets = c("B. obeum","B. massiliensis","A. rectalis"),
+  order.by = "freq",
+  mainbar.y.label = "Shared KO count",
+  sets.x.label = "Total KO per species"
+)
+
+dev.off()
+
+```
+
+```{r}
+shared_BO_BM_not_AR <- intersect(bo, bm) |> setdiff(ar)
+length(shared_BO_BM_not_AR)
+writeLines(shared_BO_BM_not_AR, "BO_BM_not_AR.kos")
+
+```
+
+```{r}
+library(UpSetR)
+pdf("UpSet_KOs_styled.pdf", width=7, height=5)
+upset(
+  fromList(list(
+    `B. obeum` = bo,
+    `B. massiliensis` = bm,
+    `A. rectalis` = ar
+  )),
+  nsets = 3,
+  sets = c("B. obeum","B. massiliensis","A. rectalis"),
+  order.by = "freq",
+  mainbar.y.label = "Number of shared KEGG orthologs",
+  sets.x.label = "Total KEGG orthologs per genome",
+  text.scale = c(1.4, 1.4, 1.4, 1.4, 1.4, 1.2)
+)
+
+dev.off()
+
+```
+```{r}
+shared_BO_BM_not_AR <- intersect(bo, bm) |> setdiff(ar)
+length(shared_BO_BM_not_AR)
+writeLines(shared_BO_BM_not_AR, "BO_BM_not_AR.kos")
+length(shared_BO_BM_not_AR)
+
+```
+```{r}
+write.table(shared_BO_BM_not_AR, "shared_BO_BM_not_AR.txt",
+            quote = FALSE, row.names = FALSE, col.names = FALSE)
+
+```
+
+```{r}
+BO_BM_not_AR_annot <- read.table("BO_BM_not_AR_annot.tsv",
+                                 sep = "\t", 
+                                 header = FALSE,
+                                 stringsAsFactors = FALSE,
+                                 quote = "")
+
+colnames(BO_BM_not_AR_annot) <- c("KO", "Function")
+head(BO_BM_not_AR_annot)
+
+BO_BM_not_AR_annot$Function_clean <- gsub("\\[EC:[0-9\\.\\-]*\\]", "", BO_BM_not_AR_annot$Function)
+head(BO_BM_not_AR_annot)
+
+BO_BM_not_AR_annot <- read.table("BO_BM_not_AR_annot.tsv",
+                                 sep = "\t",
+                                 header = FALSE,
+                                 quote = "",
+                                 stringsAsFactors = FALSE)
+
+colnames(BO_BM_not_AR_annot) <- c("KO", "Function")
+head(BO_BM_not_AR_annot)
+
+write.csv(BO_BM_not_AR_annot, "BO_BM_not_AR_annot.csv", row.names = FALSE)
+
+```
+```{r}
+colnames(BO_BM_not_AR_annot)
+BO_BM_not_AR_annot <- BO_BM_not_AR_annot[, !is.na(colnames(BO_BM_not_AR_annot)), drop = FALSE]
+BO_BM_clean <- BO_BM_not_AR_annot %>%
+  mutate(Function_clean = str_replace(Function, "\\[EC:[0-9.]+\\]", "") |> str_trim())
+
+```
+
+```{r}
+library(dplyr)
+library(KEGGREST)
+library(clusterProfiler)
+library(tidyverse)
+```
+
+```{r}
+ko_table <- read.table("BO_BM_not_AR_annot.tsv", sep="\t", header=FALSE, quote="", fill=TRUE)
+colnames(ko_table) <- c("KO", "Function")
+head(ko_table)
+
+```
+
+```{r}
+# Extract KO IDs
+ko_list <- ko_table$KO
+
+# Query KEGG pathway mapping
+ko_to_pathway <- keggLink("pathway", "ko")
+
+
+ko_list_fixed <- paste0("ko:", ko_list)
+
+ko_path_hits <- ko_to_pathway[ko_list_fixed]
+head(ko_path_hits)
+
+# Keep only bacterial pathways (ko01100 etc. include broad metabolism)
+
+# Convert to data frame
+path_df <- data.frame(
+  KO = names(ko_path_hits),
+  Pathway = sub("path:", "", ko_path_hits)
+)
+
+ko_table <- data.frame(
+  KO = ko_list,
+  Pathway = ko_path_hits,
+  stringsAsFactors = FALSE
+)
+ko_table <- ko_table[!is.na(ko_table$Pathway) & ko_table$Pathway != "", ]
+head(ko_table, 10)
+
+
+```
+
+```{r}
+library(dplyr)
+library(KEGGREST)
+
+# ko_path_hits is a named character vector:
+#   names: "ko:K00005", "ko:K00012", ...
+#   values: "path:map00010", "path:map00620", ...
+
+# Long table of all KO–pathway links
+map <- stack(ko_path_hits)                    # values = Pathway, ind = ko:Kxxxxx
+colnames(map) <- c("Pathway", "KO_prefixed")
+map <- map %>%
+  mutate(
+    KO       = sub("^ko:",  "", KO_prefixed),
+    Pathway  = sub("^path:","", Pathway)
+  ) %>%
+  select(KO, Pathway) %>%
+  distinct() %>%
+  filter(!is.na(Pathway), Pathway != "")
+
+# Add pathway names
+all_paths <- keggList("pathway")
+path_names <- data.frame(
+  Pathway      = sub("^path:", "", names(all_paths)),
+  Pathway_Name = as.character(all_paths),
+  stringsAsFactors = FALSE
+)
+
+ko_path_tbl <- map %>% left_join(path_names, by = "Pathway")
+head(ko_path_tbl)
+
+```
+```{r}
+pathway_summary <- ko_path_tbl %>%
+  count(Pathway_Name, sort = TRUE)
+
+head(pathway_summary, 20)
+
+```
+
+```{r}
+library(ggplot2)
+
+pathway_summary %>%
+  filter(!is.na(Pathway_Name)) %>%
+  slice_max(n, n = 20) %>%
+  ggplot(aes(x = reorder(Pathway_Name, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Pathways represented by BO ∩ BM (not in AR)",
+    x = "KEGG pathway",
+    y = "Shared KO count"
+  ) +
+  theme_bw(base_size = 12)
+
+```
+```{r}
+write.csv(ko_path_tbl,    "BO_BM_not_AR_KO_to_pathways.csv", row.names = FALSE)
+write.csv(pathway_summary,"BO_BM_not_AR_pathway_summary.csv", row.names = FALSE)
+
+```
+
+```{r}
+nrow(ko_path_tbl)        # total KO–pathway links
+length(unique(ko_path_tbl$KO))   # how many of the 177 KOs mapped to ≥1 pathway
+sum(is.na(ko_path_tbl$Pathway_Name))  # few or zero preferred
+
+```
+```{r}
+pathway_summary %>%
+  filter(!is.na(Pathway_Name)) %>%
+  slice_max(n, n = 20) %>%
+  ggplot(aes(x = reorder(Pathway_Name, n), y = n, fill = Pathway_Name)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    x = "KEGG Pathway",
+    y = "Shared KO Count"
+  ) +
+  scale_fill_discrete() +
+  theme_minimal(base_size = 12)
+
+```
+```{r}
+library(viridis)
+
+pathway_summary %>%
+  filter(!is.na(Pathway_Name)) %>%
+  slice_max(n, n = 20) %>%
+  ggplot(aes(x = reorder(Pathway_Name, n), y = n, fill = n)) +
+  geom_col() +
+  scale_fill_viridis(option = "D", direction = 1) +
+  coord_flip() +
+  labs(
+    title = "Pathways represented by BO ∩ BM (not in AR)",
+    x = "KEGG Pathway",
+    y = "Shared KO Count"
+  ) +
+  theme_classic(base_size = 12)
+
+```
+
+```{r}
+# vector of shared KOs
+shared_vec <- shared_BO_BM_not_AR
+
+# background = KOs in all 3 genomes
+background_vec <- unique(c(ar, bm, bo))
+
+# create enrichment table
+enrich_results <- data.frame(table(BO_BM_not_AR_annot$Pathway_Name))
+colnames(enrich_results) <- c("Pathway", "Observed")
+
+# Merge with KEGG background counts later if needed
+
+```
+```{r}
+shared <- shared_BO_BM_not_AR  # length 177
+background <- unique(c(bo, bm, ar))  # total universe of KOs
+length(background)
+
+library(clusterProfiler)
+
+ekegg <- enricher(shared,
+   TERM2GENE = pathway_df[, c("Pathway_ID", "KO")],
+   TERM2NAME = pathway_df[, c("Pathway_ID", "Pathway_Name")],
+   universe = background
+)
+
+ekegg_res <- as.data.frame(ekegg)
+head(ekegg_res)
+
+
+```
+

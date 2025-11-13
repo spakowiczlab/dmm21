@@ -18,16 +18,20 @@ library(enrichplot)
 ```
 
 ```{r}
-#load KO tables (tab-separated, single-column)
-ar <- read.table("exploratory/data/A_rectalis_KOs.txt",
+# load KO tables
+ar <- read.table("../data/A_rectalis_KOs.txt",
                  sep = "\t", header = FALSE, stringsAsFactors = FALSE)[,1] |> unique()
-bm <- read.table("exploratory/data/B_massiliensis_KOs.txt",
+bm <- read.table("../data/B_massiliensis_KOs.txt",
                  sep = "\t", header = FALSE, stringsAsFactors = FALSE)[,1] |> unique()
-bo <- read.table("exploratory/data/B_obeum_KOs.txt",
+bo <- read.table("../data/B_obeum_KOs.txt",
                  sep = "\t", header = FALSE, stringsAsFactors = FALSE)[,1] |> unique()
 
+
 # checks
-length(bo); length(bm); length(ar)
+length(ar); length(bm); length(bo)
+head(ar)
+
+
 ```
 
 ```{r}
@@ -53,25 +57,26 @@ dev.off()
 ```{r}
 shared_BO_BM_not_AR <- intersect(bo, bm) |> setdiff(ar)
 length(shared_BO_BM_not_AR)
-writeLines(shared_BO_BM_not_AR, "BO_BM_not_AR.kos")
-```
-```{r}
+
 write.table(shared_BO_BM_not_AR, "shared_BO_BM_not_AR.txt",
             quote = FALSE, row.names = FALSE, col.names = FALSE)
 ```
 
 ```{r}
 BO_BM_not_AR_annot <- read.table(
-  "exploratory/data/BO_BM_not_AR_annot.tsv",
+  "../data/BO_BM_not_AR_annot.tsv",
   sep = "\t",
   header = FALSE,
   quote = "",
   stringsAsFactors = FALSE
 )
+
+
 colnames(BO_BM_not_AR_annot) <- c("KO", "Function")
 head(BO_BM_not_AR_annot)
 
 ```
+
 ```{r}
 # define a background universe = all KOs seen in any of the 3 genomes
 background <- unique(c(bo, bm, ar))
@@ -152,6 +157,8 @@ ekegg <- enricher(query,
                   pAdjustMethod = "BH")
 
 ekegg_res <- as.data.frame(ekegg)
+sum(ekegg_res$p.adjust < 0.05)
+
 dotplot(ekegg, showCategory = 20,
         title = "Enriched KEGG pathways (BO ∩ BM \\ AR)")
 
