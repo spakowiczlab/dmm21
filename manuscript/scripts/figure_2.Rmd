@@ -114,21 +114,16 @@ ggsave("../figures/volcano_bewell-mixed-effects.svg",
 ```{r}
 volplot.in <- mic_fc_BW %>%
   ungroup() %>%
-  right_join(model_res_BW) %>%
-  mutate(tlev = str_sub(term, 1, 1),
-         # Force inclusion of Roseburia sp. CAG309
-         tlab = ifelse(term == "Roseburia_sp_CAG309", "Roseburia sp. CAG309",
-                       ifelse(p.value < 0.05, gsub("_", " ", gsub("\\w__", "", term)), NA)))
+  right_join(model_res_BW, by = "term") %>%
+  mutate(
+    tlev = str_sub(term, 1, 1),
+    tlab = case_when(
+      term == "s__Roseburia_sp_CAG_309" ~ "Roseburia sp. CAG309",   # always label it
+      p.value < 0.05 ~ gsub("_", " ", gsub("\\w__", "", term)),     # label other significant taxa
+      TRUE ~ NA_character_
+    )
+  )
 
-# If Roseburia sp. CAG309 is missing, add it manually
-if (!"Roseburia sp. CAG309" %in% volplot.in$tlab) {
-  volplot.in <- volplot.in %>%
-    add_row(term = "Roseburia_sp_CAG309", 
-            l2fc = 2.5, 
-            p.value = 0.001, 
-            tlev = "g", 
-            tlab = "Roseburia sp. CAG309")
-}
 
 # Plot the data
 volplot.in %>%
@@ -153,7 +148,6 @@ volplot.in %>%
 ggsave("../figures/volcano_bewell-mixed-effects2.svg",
        height = 5,
        width = 7)
-
 ```
 
 # BRB modelling LDA

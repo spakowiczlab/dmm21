@@ -161,6 +161,8 @@ sum(ekegg_res$p.adjust < 0.05)
 
 dotplot(ekegg, showCategory = 20,
         title = "Enriched KEGG pathways (BO ∩ BM \\ AR)")
+ggsave("../figures/enrichment.svg", width = 6, height = 4)
+
 
 ```
 
