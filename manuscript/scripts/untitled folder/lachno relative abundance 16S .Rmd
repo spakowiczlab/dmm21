@@ -1,0 +1,324 @@
+---
+title: "Lachno analysis"
+author: "LN"
+date: "2025-08-22"
+output: html_document
+---
+```{r}
+getwd()
+setwd("../data/mimic16S-key.csv")
+```
+
+```{r}
+install.packages("lme4")
+install.packages("lmerTest")
+install.packages("ggsignif")
+install.packages("ggpubr") 
+```
+
+#read
+```{r}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(vegan)
+library(funrar)
+library(RColorBrewer)
+library(lme4)
+library(lmerTest)
+library(ggsignif)
+library(ggpubr)
+```
+
+```{r}
+bewell.relabun <- read.csv("../data/RelAbun_gen.csv")
+key <- read_csv("../data/mimic16S-key.csv") %>%
+  select(-`...1`)
+```
+
+#antibiotic analysis for mimic11 
+```{r}
+key_11 <- key %>%
+  filter(experiment == "mimic 11") %>%
+  filter(timepoint %in% c("baseline", "gavage", "Anti-PD1/IgG")) %>%
+  mutate(
+    timepoint = recode(timepoint,
+                       "gavage"   = "Post-abx",
+                       "baseline" = "Baseline"),
+    gavage.simple = ifelse(grepl("Post-BRB", gavage), "tB", "tP"),
+    sampleID = as.character(sampleID),
+    timepoint = factor(timepoint, 
+                       levels = c("Baseline", "Post-abx", "Anti-PD1/IgG"))
+  ) %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+relabun.lachno11 <- key_11 %>%
+  left_join(group.spread) %>% 
+  select(timepoint,gavage.simple,treatment,sampleID, 
+         matches("Lachnospiraceae", ignore.case = TRUE))
+
+relabun.lachno11 <- relabun.lachno11 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+
+relabun.lachno11 %>%
+  ggplot(aes(x=timepoint, y=Lachnospiraceae )) +
+  geom_boxplot(outlier.shape = NA, fill= "skyblue", color = "black") +
+  geom_jitter(width = 0.2, alpha = 0.6) +
+  theme_bw() +
+  labs(x = "Timepoint",y = "Relative Abundance",title = "Lachnospiraceae abundance - Mimic 11") 
+
+```
+```{r}
+relabun.lachno11simpl <- relabun.lachno11[, 
+   c("timepoint", "gavage.simple", "treatment", "Lachnospiraceae", "sampleID"), 
+   drop = FALSE]
+
+relabunlachnostat11 <- relabun.lachno11simpl %>%
+  left_join(
+    key.char %>% select(mimicID, experiment, timepoint, gavage, treatment, sampleID),
+    by = c("sampleID"))
+
+relabunlachnostat11 <- relabunlachnostat11 %>%
+  rename(
+    timepoint = timepoint.x,
+    treatment = treatment.x
+  )
+
+relabunlachnostat11 <- relabunlachnostat11 %>%
+  mutate(mouseID = str_extract(mimicID, "m[0-9]c+"))
+
+model <- lmer(Lachnospiraceae ~ timepoint * treatment + (1 | mouseID),
+              data = relabunlachnostat11)
+summary(model)
+```
+
+
+```{r}
+ggsave("..Github/mimic/figures/mimic11-lachno_relabun.png", width = 7, height = 6)
+```
+
+#antibiotic analysis for mimic 12 
+```{r}
+key_12 <- key %>%
+  filter(experiment == "mimic 12") %>%
+  filter(timepoint == "baseline" | timepoint == "gavage" | timepoint== "Anti-PD1/IgG") %>%
+  mutate(gavage.simple = ifelse(grepl("Pre-BRB",gavage),"rB","tB"),
+         sampleID = as.character(sampleID)) %>% 
+  select(sampleID,timepoint,gavage.simple, treatment)
+
+relabun.lachno12 <- key_12 %>%
+  left_join(group.spread) %>%
+  select(timepoint,gavage.simple,treatment, sampleID, 
+         matches("Lachnospiraceae", ignore.case = TRUE))
+    
+relabun.lachno12 <- relabun.lachno12 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+
+relabun.lachno12 %>%
+  ggplot(aes(x=timepoint, y=Lachnospiraceae, fill=treatment)) +
+  geom_bar(position="dodge", stat="identity") +
+  theme_bw() +
+  labs(x = "Gavage",y = "Relative Abundance",title = "Lachnospiraceae abundance - Mimic 12")
+```
+#antibiotic analysis for mimic 13
+```{r}
+key_13 <- key %>%
+  filter(experiment == "mimic 13") %>%
+  filter(timepoint %in% c("baseline", "gavage", "Anti-PD1/IgG")) %>%
+  mutate(
+    timepoint = recode(timepoint,
+                       "gavage"   = "Post-abx",
+                       "baseline" = "Baseline"),
+    gavage.simple = ifelse(grepl("Pre-BRB", gavage), "rB", "tB"),
+    sampleID = as.character(sampleID),
+    timepoint = factor(timepoint,
+                       levels = c("Baseline", "Post-abx", "Anti-PD1/IgG"))
+  ) %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+relabun.lachno13 <- key_13 %>%
+  left_join(group.spread) %>%
+  select(timepoint,gavage.simple,treatment, sampleID,
+         matches("Lachnospiraceae", ignore.case = TRUE))
+    
+relabun.lachno13 <- relabun.lachno13 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+relabun.lachno13 %>%
+  ggplot(aes(x=timepoint, y=Lachnospiraceae,)) +
+  geom_boxplot(outlier.shape = NA, fill= "skyblue", color = "black") +
+  geom_jitter(width = 0.2, alpha = 0.6) +
+  theme_bw() +
+  labs(x = "Timepoint",y = "Relative Abundance",title = "Lachnospiraceae - Mimic 13")
+
+```
+#stats for mimic 13
+```{r}
+relabun.lachno13simpl <- relabun.lachno13[, 
+   c("timepoint", "gavage.simple", "treatment", "Lachnospiraceae", "sampleID"), 
+   drop = FALSE]
+
+relabunlachnostat13 <- relabun.lachno13simpl %>%
+  left_join(
+    key.char %>% select(mimicID, experiment, timepoint, gavage, treatment, sampleID),
+    by = c("sampleID"))
+
+relabunlachnostat13 <- relabunlachnostat13 %>%
+  rename(
+    timepoint = timepoint.x,
+    treatment = treatment.x
+  )
+
+relabunlachnostat13 <- relabunlachnostat13 %>%
+  mutate(mouseID = str_extract(mimicID, "m[0-9]c+"))
+
+model <- lmer(Lachnospiraceae ~ timepoint * treatment + (1 | mouseID),
+              data = relabunlachnostat)
+summary(model)
+
+
+```
+
+
+#antibiotic analysis for mimic 16 except dont really pay attention to this because there is no gavage timepoint data
+```{r}
+key_16 <- key %>%
+  filter(experiment == "mimic 16") %>%
+  filter(timepoint %in% c("baseline", "necropsy")) %>%
+  mutate(
+    timepoint = recode(timepoint,
+                       "baseline" = "Baseline",
+                       "necropsy" = "Necropsy"),
+    gavage.simple = case_when(
+      grepl("Pre-BRB \\+ Blautia", gavage) ~ "Pre-BRB + Blautia",
+      grepl("Pre-BRB", gavage) ~ "Pre-BRB",
+      TRUE ~ "Other"
+    ),
+    sampleID = as.character(sampleID),
+    timepoint = factor(timepoint, levels = c("Baseline", "Necropsy"))
+  ) %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+
+relabun.lachno16 <- key_16 %>%
+  left_join(group.spread) %>%
+  select(timepoint,gavage.simple,treatment, 
+         matches("Lachnospiraceae", ignore.case = TRUE))
+    
+relabun.lachno16 <- relabun.lachno16 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+
+relabun.lachno16 %>%
+  ggplot(aes(x=timepoint, y=Lachnospiraceae)) +
+  geom_boxplot(outlier.shape = NA, fill= "skyblue", color = "black") +
+  geom_jitter(width = 0.2, alpha = 0.6) +
+  theme_bw() +
+  labs(x = "Timepoint",y = "Relative Abundance",title = "Lachnospiraceae - Mimic 16")
+
+```
+
+#antibiotic analysis for mimic 1 except there is no baseline assesment 
+```{r}
+key_1 <- key %>%
+  filter(experiment == "mimic 1") %>%
+  filter(timepoint %in% c("gavage", "necropsy", "Anti-PD1/IgG")) %>%
+  mutate(
+    timepoint = recode(timepoint,
+                       "gavage"   = "Post-abx",
+                       "necropsy" = "Necropsy"),
+    gavage.simple = ifelse(grepl("Pre-BRB", gavage), "rB", "tB"),
+    sampleID = as.character(sampleID),
+    timepoint = factor(timepoint,
+                       levels = c("Post-abx", "Anti-PD1/IgG", "Necropsy"))
+  ) %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+
+relabun.lachno1 <- key_1 %>%
+  left_join(group.spread) %>%
+  select(timepoint,gavage.simple,treatment, sampleID,
+         matches("Lachnospiraceae", ignore.case = TRUE))
+    
+relabun.lachno1 <- relabun.lachno1 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+relabun.lachno1 %>%
+  ggplot(aes(x=timepoint, y=Lachnospiraceae)) +
+  geom_boxplot(outlier.shape = NA, fill= "skyblue", color = "black") +
+  geom_jitter(width = 0.2, alpha = 0.6) +
+  theme_bw() +
+  labs(x = "Timepoint",y = "Relative Abundance",title = "Lachnospiraceae - Mimic 1")
+```
+
+#Stats on mimic1 
+```{r}
+relabun.lachno1simpl <- relabun.lachno1[, 
+   c("timepoint", "gavage.simple", "treatment", "Lachnospiraceae", "sampleID"), 
+   drop = FALSE]
+
+key.char <- key %>%
+  mutate(sampleID = as.character(sampleID))
+
+relabunlachnostat <- relabun.lachno1simpl %>%
+  left_join(
+    key.char %>% select(mimicID, experiment, timepoint, gavage, treatment, sampleID),
+    by = c("sampleID")
+  )
+
+relabunlachnostat <- relabunlachnostat %>%
+  rename(
+    timepoint = timepoint.x,
+    treatment = treatment.x
+  )
+
+relabunlachnostat <- relabunlachnostat %>%
+  mutate(mouseID = str_extract(mimicID, "m[0-9]_+"))
+
+
+```
+
+```{r}
+model <- lmer(Lachnospiraceae ~ timepoint * treatment + (1 | mouseID),
+              data = relabunlachnostat)
+summary(model)
+```
+
+#antibiotic analysis for mimic 10
+```{r}
+key_10 <- key %>%
+  filter(experiment == "mimic 10") %>%
+  filter(timepoint %in% c("baseline", "gavage", "Anti-PD1/IgG")) %>%
+  mutate(
+    timepoint = recode(timepoint,
+                       "gavage"   = "Post-abx",
+                       "baseline" = "Baseline"),
+    gavage.simple = ifelse(grepl("Post-BRB", gavage), "tB", "tP"),
+    sampleID = as.character(sampleID),
+    timepoint = factor(timepoint, 
+                       levels = c("Baseline", "Post-abx", "Anti-PD1/IgG"))
+  ) %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+relabun.lachno10 <- key_10 %>%
+  left_join(group.spread) %>% 
+  select(timepoint,gavage.simple,treatment,sampleID, 
+         matches("Lachnospiraceae", ignore.case = TRUE))
+
+relabun.lachno10 <- relabun.lachno10 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+
+relabun.lachno10 %>%
+  ggplot(aes(x=timepoint, y=Lachnospiraceae )) +
+  geom_boxplot(outlier.shape = NA, fill= "skyblue", color = "black") +
+  geom_jitter(width = 0.2, alpha = 0.6) +
+  theme_bw() +
+  labs(x = "Timepoint",y = "Relative Abundance",title = "Lachnospiraceae abundance - Mimic 10") 
+```
+
+
+
+

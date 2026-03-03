@@ -1,0 +1,269 @@
+---
+title: "lachno PCA w stool"
+author: "LN"
+date: "2025-10-14"
+output: html_document
+---
+```{r}
+install.packages("ape")
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(vegan)
+library(ape)
+library(ggrepel)
+```
+
+```{r}
+patient.lachno <- bewell.relabun %>%
+  select(X, contains("Lachnospiraceae")) %>%
+  rename(sampleID = X)
+
+patient.lachno.11 <- patient.lachno %>%
+  filter(sampleID %in% c("79-tB", "79-tP")) %>%
+  mutate(gavage.simple = str_extract(sampleID, "tB|tP"))
+
+#join mouse with patient 
+relabun.lachno11.pnt <- relabun.lachno11 %>%
+  left_join(patient.lachno.11 %>% 
+              select(gavage.simple, patient_value = g__Lachnospiraceae_unclassified),
+            by = "gavage.simple")
+
+metadata.11.pnt <- relabun.lachno11.pnt %>%
+  select(sampleID, timepoint, gavage.simple, treatment, )
+
+otu.11.pnt <- relabun.lachno11.pnt %>%
+  select(Lachnospiraceae, patient_value) %>% 
+  as.data.frame()
+
+rownames(otu.11.pnt) <- relabun.lachno11.pnt$sampleID
+
+max_mouse <- max(relabun.lachno11.pnt$g_unclassified_Lachnospiraceae, na.rm = TRUE)
+max_patient <- max(relabun.lachno11.pnt$patient_value, na.rm = TRUE)
+
+relabun.lachno11.pnt <- relabun.lachno11.pnt %>%
+  mutate(patient_scaled = patient_value / max_patient * max_mouse)
+
+  
+```
+
+```{r}
+dist_bray.11 <- vegdist(otu.11.pnt, method = "bray")
+
+ord.11.pnt <- cmdscale(dist_bray.11, k=2, eig = TRUE)
+ordination_df.11.pnt <- data.frame(
+  sampleID = rownames(ord.11.pnt$points),
+  PC1 = ord.11.pnt$points[,1],
+  PC2 = ord.11.pnt$points[,2]
+) %>%
+  left_join(metadata.11.pnt, by = "sampleID")
+```
+
+```{r}
+centroids_11_pnt <- ordination_df.11.pnt %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df.11.pnt <- ordination_df.11.pnt %>%
+  left_join(centroids_11_pnt, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+
+```{r}
+ggplot(ordination_df.11.pnt, aes(PC1, PC2, color = timepoint)) +
+  geom_segment(aes(xend = PC1_centroid, yend = PC2_centroid),
+               alpha = 0.4, linewidth = 0.4) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(type = "t", level = 0.68, linewidth = 0.8) +
+  theme_bw() +
+  labs(title = "PCoA - Bray–Curtis (mimic 11 w pnt stool)",
+       x = "PCoA 1", y = "PCoA 2")
+```
+
+
+
+```{r}
+ggplot(relabun.lachno11.pnt, 
+       aes(x = timepoint, 
+           y = g_unclassified_Lachnospiraceae, 
+           color = gavage.simple)) +
+  geom_jitter(width = 0.2, alpha = 0.8, size = 3) +
+  # overlay rescaled stool points
+  geom_point(data = distinct(relabun.lachno11.pnt, gavage.simple, patient_scaled),
+             aes(x = "Patient stool", y = patient_scaled),
+             shape = 10, size = 3, stroke = 1, color = "black") +
+  geom_text_repel(data = distinct(relabun.lachno11.pnt, gavage.simple, patient_scaled),
+                  aes(x = "Patient stool", y = patient_scaled, label = gavage.simple),
+                  color = "black", fontface = "bold") +
+  theme_bw() +
+  labs(title = "Lachnospiraceae abundance - mimic 11: Mice vs Donor stool",
+       x = "Timepoint",
+       y = "Relative abundance (scaled)",
+       color = "Gavage source")
+
+```
+
+```{r}
+
+patient.lachno.13 <- patient.lachno %>%
+  filter(sampleID %in% c("84-tB", "84-rB")) %>%
+  mutate(gavage.simple = str_extract(sampleID, "tB|rB"))
+
+#join mouse with patient 
+relabun.lachno.13 <- relabun.lachno13 %>%
+  left_join(patient.lachno.13 %>% 
+              select(gavage.simple, patient_value = g__Lachnospiraceae_unclassified),
+            by = "gavage.simple")
+
+metadata.13.pnt <- relabun.lachno.13 %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+otu.13.pnt <- relabun.lachno.13 %>%
+  select(Lachnospiraceae, patient_value) %>% 
+  as.data.frame()
+
+rownames(otu.13.pnt) <- relabun.lachno.13$sampleID
+
+max_mouse.13 <- max(relabun.lachno.13$g_unclassified_Lachnospiraceae, na.rm = TRUE)
+max_patient.13 <- max(relabun.lachno.13$patient_value, na.rm = TRUE)
+
+relabun.lachno.13 <- relabun.lachno.13 %>%
+  mutate(patient_scaled = patient_value/ max_patient * max_mouse)
+```
+
+```{r}
+dist_bray.13 <- vegdist(otu.13.pnt, method = "bray")
+
+ord.13.pnt <- cmdscale(dist_bray.13, k=2, eig = TRUE)
+ordination_df_13 <- data.frame(
+  sampleID = rownames(ord.13.pnt$points),
+  PC1 = ord.13.pnt$points[,1],
+  PC2 = ord.13.pnt$points[,2]
+) %>%
+  left_join(metadata.13.pnt, by = "sampleID")
+```
+
+```{r}
+centroids_13_pnt <- ordination_df_13 %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df_13 <- ordination_df_13 %>%
+  left_join(centroids_13_pnt, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+
+```{r}
+ordination_df_13 %>%
+  group_by(timepoint) %>%
+  filter(n() > 2) %>%
+  ggplot(aes(PC1, PC2, color = timepoint)) +
+  geom_segment(aes(xend = PC1_centroid, yend = PC2_centroid),
+               alpha = 0.4, linewidth = 0.4) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(type = "t", level = 0.68, linewidth = 0.8) +
+  theme_bw() +
+  labs(title = "PCoA - Bray–Curtis (mimic 13 w pnt stool)",
+       x = "PCoA 1", y = "PCoA 2")
+```
+```{r}
+ggplot(relabun.lachno.13, 
+       aes(x = timepoint, 
+           y = g_unclassified_Lachnospiraceae, 
+           color = gavage.simple)) +
+  geom_jitter(width = 0.2, alpha = 0.8, size = 3) +
+  # overlay rescaled stool points
+  geom_point(data = distinct(relabun.lachno.13, gavage.simple, patient_scaled),
+             aes(x = "Patient stool", y = patient_scaled),
+             shape = 10, size = 3, stroke = 1, color = "black") +
+  geom_text_repel(data = distinct(relabun.lachno.13, gavage.simple, patient_scaled),
+                  aes(x = "Patient stool", y = patient_scaled, label = gavage.simple),
+                  color = "black", fontface = "bold") +
+  theme_bw() +
+  labs(title = "Lachnospiraceae abundance - mimic 13: Mice vs Donor stool",
+       x = "Timepoint",
+       y = "Relative abundance (scaled)",
+       color = "Gavage source")
+
+```
+
+```{r}
+patient.lachno.1 <- patient.lachno %>%
+  filter(sampleID %in% c("55-tB")) %>%
+  mutate(gavage.simple = str_extract(sampleID, "tB"))
+
+#join mouse with patient 
+relabun.lachno.1 <- relabun.lachno1 %>%
+  left_join(patient.lachno.1 %>% 
+              select(gavage.simple, patient_value = g__Lachnospiraceae_unclassified),
+            by = "gavage.simple")
+
+metadata.1.pnt <- relabun.lachno.1 %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+otu.1.pnt <- relabun.lachno.1 %>%
+  select(Lachnospiraceae, patient_value) %>% 
+  as.data.frame()
+
+rownames(otu.1.pnt) <- relabun.lachno.1$sampleID
+
+max_mouse.1 <- max(relabun.lachno.1$g_unclassified_Lachnospiraceae, na.rm = TRUE)
+max_patient.1 <- max(relabun.lachno.1$patient_value, na.rm = TRUE)
+
+relabun.lachno.1 <- relabun.lachno.1 %>%
+  mutate(patient_scaled = patient_value/ max_patient * max_mouse)
+
+otu.1.pnt.zero <- otu.1.pnt %>% 
+  mutate(patient_value = replace_na(patient_value, 0))
+```
+
+```{r}
+dist_bray.1 <- vegdist(otu.1.pnt.zero, method = "bray")
+
+ord.1.pnt <- cmdscale(dist_bray.1, k=2, eig = TRUE)
+ordination_df_1 <- data.frame(
+  sampleID = rownames(ord.1.pnt$points),
+  PC1 = ord.1.pnt$points[,1],
+  PC2 = ord.1.pnt$points[,2]
+) %>%
+  left_join(metadata.1.pnt, by = "sampleID")
+```
+
+```{r}
+centroids_13_pnt <- ordination_df_13 %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df_13 <- ordination_df_13 %>%
+  left_join(centroids_13_pnt, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+
+```{r}
+ggplot(relabun.lachno.1, 
+       aes(x = timepoint, 
+           y = g_unclassified_Lachnospiraceae, 
+           color = gavage.simple)) +
+  geom_jitter(width = 0.2, alpha = 0.8, size = 3) +
+  # overlay rescaled stool points
+  geom_point(data = distinct(relabun.lachno.1, gavage.simple, patient_scaled),
+             aes(x = "Patient stool", y = patient_scaled),
+             shape = 10, size = 3, stroke = 1, color = "black") +
+  geom_text_repel(data = distinct(relabun.lachno.13, gavage.simple, patient_scaled),
+                  aes(x = "Patient stool", y = patient_scaled, label = gavage.simple),
+                  color = "black", fontface = "bold") +
+  theme_bw() +
+  labs(title = "Lachnospiraceae abundance - mimic 1: Mice vs Donor stool",
+       x = "Timepoint",
+       y = "Relative abundance (scaled)",
+       color = "Gavage source")
+
+```
+
+

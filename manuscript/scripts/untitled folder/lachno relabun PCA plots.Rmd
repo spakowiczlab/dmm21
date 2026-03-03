@@ -1,0 +1,285 @@
+---
+title: "lachno PCA 16S"
+author: "LN"
+date: "2025-09-26"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(vegan)
+```
+
+sample = c("mim16.m2c3t", "mim16.m1c3t", "mim16.m3c3t", "mim16.m1c4t", "mim16.m2c4t", "mim16.m3c4t"),
+#Split metadata vs taxa for mimic 11 
+```{r}
+metadata.11 <- relabun.lachno11 %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+otu.11 <- relabun.lachno11 %>%
+  select(-timepoint, -gavage.simple, -treatment, -sampleID) %>% 
+  as.data.frame()
+
+rownames(otu.11) <- relabun.lachno11$sampleID
+
+```
+
+#Compute distances + PCA for mimic 11  
+```{r}
+dist_bray <- vegdist(otu.11, method = "bray")
+
+ord.11 <- cmdscale(dist_bray, k=2, eig = TRUE)
+ordination_df.11 <- data.frame(
+  sampleID = rownames(ord.11$points),
+  PC1 = ord.11$points[,1],
+  PC2 = ord.11$points[,2]
+) %>%
+  left_join(metadata.11, by = "sampleID")
+```
+#compute centroids for mimic 11
+```{r}
+centroids_11 <- ordination_df.11 %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df.11 <- ordination_df.11 %>%
+  left_join(centroids_11, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+
+#Plot for mimic 11 
+```{r}
+ggplot(ordination_df.11, aes(PC1, PC2, color = timepoint)) +
+  geom_segment(aes(xend = PC1_centroid, yend = PC2_centroid),
+               alpha = 0.4, linewidth = 0.4) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(type = "t", level = 0.68, linewidth = 0.8) +
+  theme_bw() +
+  labs(title = "PCoA - Bray–Curtis (mimic 11)",
+       x = "PCoA 1", y = "PCoA 2")
+```
+#plot distances as a separate summary- mimic 11 
+```{r}
+ggplot(ordination_df.11, aes(x = timepoint, y = dist_to_centroid, fill = timepoint)) +
+  geom_boxplot(alpha = 0.6) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  theme_bw() +
+  labs(y = "Distance to centroid (Euclidean)",
+       x = "Timepoint",
+       title = "Group dispersion (mimic 11)")
+```
+
+
+#split metadata vs taxa for mimic 13
+```{r}
+metadata.13 <- relabun.lachno13 %>%
+  select(sampleID, timepoint)
+
+otu <- as.matrix(otu.13)
+mode(otu) <- "numeric"
+otu[is.na(otu)] <- 0
+otu[otu < 0] <- 0
+
+keep_samples <- rowSums(otu) > 0
+otu <- otu[keep_samples, , drop = FALSE]
+metadata.13 <- metadata.13 %>% filter(sampleID %in% rownames(otu))
+otu <- otu[, colSums(otu) > 0, drop = FALSE]
+```
+
+#Compute distances + PCA for mimic 13
+```{r}
+dist_bray_13 <- vegdist(otu, method = "bray")
+ord_13 <- cmdscale(dist_bray_13, k = 2, eig = TRUE)
+
+ordination_df_13 <- data.frame(
+  sampleID = rownames(ord_13$points),
+  PC1 = ord_13$points[,1],
+  PC2 = ord_13$points[,2]
+) %>% left_join(metadata.13, by = "sampleID")
+```
+
+#compute centroids for each group
+```{r}
+centroids_13 <- ordination_df_13 %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df_13 <- ordination_df_13 %>%
+  left_join(centroids_13, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+
+#plot PCA for mimic 13
+```{r}
+ggplot(ordination_df_13, aes(PC1, PC2, color = timepoint)) +
+  geom_segment(aes(xend = PC1_centroid, yend = PC2_centroid),
+               alpha = 0.4, linewidth = 0.4) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(type = "t", level = 0.68, linewidth = 0.8) +
+  theme_bw() +
+  labs(title = "PCoA - Bray–Curtis (mimic 13)",
+       x = "PCoA 1", y = "PCoA 2")
+```
+
+#plot distances as a separate summary- mimic 13 
+```{r}
+ggplot(ordination_df_13, aes(x = timepoint, y = dist_to_centroid, fill = timepoint)) +
+  geom_boxplot(alpha = 0.6) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  theme_bw() +
+  labs(y = "Distance to centroid (Euclidean)",
+       x = "Timepoint",
+       title = "Group dispersion (mimic 13)")
+```
+
+
+
+#split metadata vs taxa for mimic 12
+```{r}
+key_12 <- key_12 %>%
+  mutate(
+    timepoint = recode(timepoint, 
+                       "gavage" = "Post-abx", 
+                       "baseline" = "Baseline")
+  )
+
+relabun.lachno12 <- key_12 %>%
+  left_join(group.spread) %>%
+  select(timepoint,gavage.simple,treatment, sampleID, 
+         matches("Lachnospiraceae", ignore.case = TRUE))
+
+relabun.lachno12 <- relabun.lachno12 %>%
+  mutate(Lachnospiraceae = rowSums(select(., matches("Lachnospiraceae", ignore.case = TRUE)),
+                                   na.rm = TRUE))
+
+metadata.12 <- relabun.lachno12 %>%
+  select(sampleID, timepoint)
+
+otu <- as.matrix(otu.12)
+mode(otu) <- "numeric"
+otu[is.na(otu)] <- 0
+otu[otu < 0] <- 0
+
+keep_samples <- rowSums(otu) > 0
+otu <- otu[keep_samples, , drop = FALSE]
+metadata.12 <- metadata.12 %>% filter(sampleID %in% rownames(otu))
+otu <- otu[, colSums(otu) > 0, drop = FALSE]
+
+
+```
+
+#Compute distances + PCA for mimic 12
+```{r}
+dist_bray_12 <- vegdist(otu, method = "bray")
+ord_12 <- cmdscale(dist_bray_12, k = 2, eig = TRUE)
+
+ordination_df_12 <- data.frame(
+  sampleID = rownames(ord_12$points),
+  PC1 = ord_12$points[,1],
+  PC2 = ord_12$points[,2]
+) %>% left_join(metadata.12, by = "sampleID")
+```
+
+#plot for mimic 12
+```{r}
+ggplot(ordination_df_12, aes(PC1, PC2, color = timepoint)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(type = "t", level = 0.68, linewidth = 0.8) +
+  theme_bw() +
+  labs(title = "PCoA - Bray–Curtis (mimic 12)", x = "PCoA 1", y = "PCoA 2")
+```
+
+#split metadata vs taxa for mimic 1
+```{r}
+metadata.1 <- relabun.lachno1 %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+otu.1 <- relabun.lachno1 %>%
+  select(-timepoint, -gavage.simple, -treatment, -sampleID) %>% 
+  as.data.frame()
+
+rownames(otu.1) <- relabun.lachno1$sampleID
+
+#compute distances
+
+dist_bray_1 <- vegdist(otu.1, method = "bray")
+
+ord.1 <- cmdscale(dist_bray_1, k=2, eig = TRUE)
+ordination_df.1 <- data.frame(
+  sampleID = rownames(ord.1$points),
+  PC1 = ord.1$points[,1],
+  PC2 = ord.1$points[,2]
+) %>%
+  left_join(metadata.1, by = "sampleID")
+
+#compute centroids 
+
+centroids_1 <- ordination_df.1 %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df.1 <- ordination_df.1 %>%
+  left_join(centroids_1, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+
+#plot for mimic 1
+```{r}
+ggplot(ordination_df.1, aes(PC1, PC2, color = timepoint)) +
+  geom_segment(aes(xend = PC1_centroid, yend = PC2_centroid),
+               alpha = 0.4, linewidth = 0.4) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(type = "t", level = 0.68, linewidth = 0.8) +
+  theme_bw() +
+  labs(title = "PCoA - Bray–Curtis (mimic 1)",
+       x = "PCoA 1", y = "PCoA 2")
+```
+```{r}
+ggplot(ordination_df.1, aes(x = timepoint, y = dist_to_centroid, fill = timepoint)) +
+  geom_boxplot(alpha = 0.6) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  theme_bw() +
+  labs(y = "Distance to centroid (Euclidean)",
+       x = "Timepoint",
+       title = "Group dispersion (mimic 1)")
+```
+#split metadata vs taxa for mimic 16
+```{r}
+metadata.16 <- relabun.lachno16 %>%
+  select(sampleID, timepoint, gavage.simple, treatment)
+
+otu.16 <- relabun.lachno16 %>%
+  select(-timepoint, -gavage.simple, -treatment, -sampleID) %>% 
+  as.data.frame()
+
+rownames(otu.1) <- relabun.lachno1$sampleID
+
+#compute distances
+
+dist_bray_1 <- vegdist(otu.1, method = "bray")
+
+ord.1 <- cmdscale(dist_bray_1, k=2, eig = TRUE)
+ordination_df.1 <- data.frame(
+  sampleID = rownames(ord.1$points),
+  PC1 = ord.1$points[,1],
+  PC2 = ord.1$points[,2]
+) %>%
+  left_join(metadata.1, by = "sampleID")
+
+#compute centroids 
+
+centroids_1 <- ordination_df.1 %>%
+  group_by(timepoint) %>%
+  summarize(PC1_centroid = mean(PC1),
+            PC2_centroid = mean(PC2))
+
+ordination_df.1 <- ordination_df.1 %>%
+  left_join(centroids_1, by = "timepoint") %>%
+  mutate(dist_to_centroid = sqrt((PC1 - PC1_centroid)^2 + (PC2 - PC2_centroid)^2))
+```
+```{r}
+
+```
+

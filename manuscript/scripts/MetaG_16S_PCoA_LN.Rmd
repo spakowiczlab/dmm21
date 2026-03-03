@@ -1,0 +1,1268 @@
+---
+title: "16S engraftment analysis"
+author: "LN"
+date: "2025-11-24"
+output: html_document
+---
+
+```{r}
+getwd()
+```
+
+
+```{r}
+install.packages("here")
+```
+
+```{r}
+library(tidyverse)
+library(vegan)
+library(dplyr)
+library(here) 
+```
+
+
+#Helper function: compute PCoA scores and merge with sample metadata 
+```{r}
+pcoa_df <- function(bind_table, key_sub, bewell_id, bewell_timepoint_label = "Bewell") {
+
+  BC <- vegdist(bind_table, method = "bray") %>%
+    as.matrix()
+
+  pcoa <- cmdscale(BC, k = 2, eig = TRUE)
+
+  scores <- as.data.frame(pcoa$points) %>%
+    rownames_to_column("sampleID") %>%
+    rename(PC1 = V1,
+           PC2 = V2)
+
+  meta.mimic <- key_sub %>%
+    mutate(sampleID = as.character(sampleID),
+           origin   = "Mouse")
+
+  meta.bewell <- tibble(
+    sampleID = bewell_id,
+    timepoint = bewell_timepoint_label,
+    gavage = bewell_timepoint_label,
+    origin = "Human"
+  )
+
+  meta <- bind_rows(meta.mimic, meta.bewell)
+
+  out <- left_join(scores, meta, by = "sampleID")
+
+  # ---- add % variance explained as attributes ----
+  eig <- pcoa$eig
+  eig_pos <- eig[eig > 0]
+  pct <- eig_pos / sum(eig_pos) * 100
+
+  attr(out, "pc1_label") <- paste0("PC1 (", round(pct[1], 1), "%)")
+  attr(out, "pc2_label") <- paste0("PC2 (", round(pct[2], 1), "%)")
+
+  out
+}
+```
+
+#Bind table: mim12 (HONC85-rB)
+```{r}
+bind.table.85v1 <- bind_rows(bewell.85v1,mim12v1.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 12 (85-rB) with standardized timepoint labels
+```{r}
+# metadata
+key.85v1 <- key %>%
+  filter(experiment == "mimic 12", gavage == "Pre-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# make PCoA df (PC1, PC2 + metadata)
+pcoa.85v1_raw <- pcoa_df(
+  bind_table = bind.table.85v1,
+  key_sub    = key.85v1,
+  bewell_id  = "85-rB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab <- attr(pcoa.85v1_raw, "pc1_label")
+pc2_lab <- attr(pcoa.85v1_raw, "pc2_label")
+
+# recode + factor levels
+pcoa.85v1 <- pcoa.85v1_raw %>%
+  mutate(
+    timepoint = recode(
+      timepoint,
+      "Bewell"       = "Study Participant",
+      "baseline"     = "Pre-antibiotics",
+      "Baseline"     = "Pre-antibiotics",
+      "gavage"       = "Pre-gavage",
+      "Gavage"       = "Pre-gavage",
+      "Anti-PD1/IgG" = "First Anti-PD1/IgG Inj.",
+      "necropsy"     = "End of Study",
+      "Necropsy"     = "End of Study"
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 12(85-rB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.85v1 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.85v1, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.85v1 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+ geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+ labs(
+    title = "Distance from human donor (85) to recipient mice (rB) ",
+    x = pc1_lab,
+    y = pc2_lab,
+    color = "Timepoint",
+    shape = "Origin"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+ggsave("../figures/supplement-pcoa-85rB.png", width = 7, height = 5)
+```
+
+#Bind table: mim12 (HONC85-tB)
+```{r}
+bind.table.85v2 <- bind_rows(bewell.85v2,mim12v2.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 12 (85-tB) with standardized timepoint labels
+```{r}
+# metadata
+key.85v2 <- key %>%
+  filter(experiment == "mimic 12", gavage == "Post-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# make PCoA df (PC1, PC2 + metadata)
+pcoa.85v2_raw <- pcoa_df(
+  bind_table = bind.table.85v2,
+  key_sub    = key.85v2,
+  bewell_id  = "85-tB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_85v2 <- attr(pcoa.85v2_raw, "pc1_label")
+pc2_lab_85v2 <- attr(pcoa.85v2_raw, "pc2_label")
+
+# recode + factor levels
+pcoa.85v2 <- pcoa.85v2_raw %>%
+  mutate(
+    timepoint = recode(
+      timepoint,
+      "Bewell"       = "Study Participant",
+      "baseline"     = "Pre-antibiotics",
+      "Baseline"     = "Pre-antibiotics",
+      "gavage"       = "Pre-gavage",
+      "Gavage"       = "Pre-gavage",
+      "Anti-PD1/IgG" = "First Anti-PD1/IgG Inj.",
+      "necropsy"     = "End of Study",
+      "Necropsy"     = "End of Study"
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+```
+
+#Plot mimic 12(85-tB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.85v2 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.85v2, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.85v2 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (85) to recipient mice (tB)",
+    x = pc1_lab_85v2,
+    y = pc2_lab_85v2,
+    color = "Timepoint",
+    shape = "Origin"
+  )
+
+ggsave("../figures/supplement-pcoa-85tB.png", width = 7, height = 5)
+```
+
+#Bind table: mim13 (HONC84-rB)
+```{r}
+bind.table.84v1 <- bind_rows(bewell.84v1,mim13v1.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 13 (84-rB) with standardized timepoint labels
+```{r}
+# metadata
+key.84v1 <- key %>%
+  filter(experiment == "mimic 13", gavage == "Pre-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# make PCoA df (PC1, PC2 + metadata)
+pcoa.84v1_raw <- pcoa_df(
+  bind_table = bind.table.84v1,
+  key_sub    = key.84v1,
+  bewell_id  = "84-rB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_84v1 <- attr(pcoa.84v1_raw, "pc1_label")
+pc2_lab_84v1 <- attr(pcoa.84v1_raw, "pc2_label")
+
+# recode + factor levels
+pcoa.84v1 <- pcoa.84v1_raw %>%
+  mutate(
+    timepoint = recode(
+      timepoint,
+      "Bewell"       = "Study Participant",
+      "baseline"     = "Pre-antibiotics",
+      "Baseline"     = "Pre-antibiotics",
+      "gavage"       = "Pre-gavage",
+      "Gavage"       = "Pre-gavage",
+      "Anti-PD1/IgG" = "First Anti-PD1/IgG Inj.",
+      "necropsy"     = "End of Study",
+      "Necropsy"     = "End of Study"
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+```
+
+#Plot mimic 13(84-rB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.84v1 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.84v1, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.84v1 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (84) to recipient mice (rB)",
+    x = pc1_lab_84v1,
+    y = pc2_lab_84v1,
+    color = "Timepoint",
+    shape = "Origin"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-84rB.png", width = 7, height = 5)
+```
+
+#Bind table: mim13 (HONC84-tB)
+```{r}
+bind.table.84v2 <- bind_rows(bewell.84v2,mim13v2.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 13 (84-tB) with standardized timepoint labels
+```{r}
+# metadata
+key.84v2 <- key %>%
+  filter(experiment == "mimic 13", gavage == "Post-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# make PCoA df (PC1, PC2 + metadata)
+pcoa.84v2_raw <- pcoa_df(
+  bind_table = bind.table.84v2,
+  key_sub    = key.84v2,
+  bewell_id  = "84-tB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_84v2 <- attr(pcoa.84v2_raw, "pc1_label")
+pc2_lab_84v2 <- attr(pcoa.84v2_raw, "pc2_label")
+
+# recode + factor levels
+pcoa.84v2 <- pcoa.84v2_raw %>%
+  mutate(
+    timepoint = recode(
+      timepoint,
+      "Bewell"       = "Study Participant",
+      "baseline"     = "Pre-antibiotics",
+      "Baseline"     = "Pre-antibiotics",
+      "gavage"       = "Pre-gavage",
+      "Gavage"       = "Pre-gavage",
+      "Anti-PD1/IgG" = "First Anti-PD1/IgG Inj.",
+      "necropsy"     = "End of Study",
+      "Necropsy"     = "End of Study"
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+```
+
+#Plot mimic 13(84-tB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.84v2 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.84v2, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.84v2 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (84) to recipient mice (tB)",
+    x = pc1_lab_84v2,
+    y = pc2_lab_84v2,
+    color = "Timepoint",
+    shape = "Origin"
+  )+ 
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-84tB.png", width = 7, height = 5)
+```
+
+#Bind table: mim10 (HONC68-rB)
+```{r}
+bind.table.68v1 <- bind_rows(bewell.68v1,mim10v1.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 10 (68-rB) with standardized timepoint labels
+```{r}
+# metadata
+key.68v1 <- key %>%
+  filter(experiment == "mimic 10", gavage == "Pre-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.68v1_raw <- pcoa_df(
+  bind_table = bind.table.68v1,
+  key_sub    = key.68v1,
+  bewell_id  = "68-rB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_68v1 <- attr(pcoa.68v1_raw, "pc1_label")
+pc2_lab_68v1 <- attr(pcoa.68v1_raw, "pc2_label")
+
+pcoa.68v1 <- pcoa.68v1_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 10(68-rB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.68v1 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.68v1, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.68v1 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (68) to recipient mice (rB)",
+    x = pc1_lab_68v1,
+    y = pc2_lab_68v1,
+    color = "Timepoint",
+    shape = "Origin"
+  )+ 
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-68rB.png", width = 7, height = 5)
+```
+
+
+#Bind table: mim10 (HONC68-tB)
+```{r}
+bind.table.68v2 <- bind_rows(bewell.68v2,mim10v2.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 10 (68-tB) with standardized timepoint labels
+```{r}
+# metadata
+key.68v2 <- key %>%
+  filter(experiment == "mimic 10", gavage == "Post-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.68v2_raw <- pcoa_df(
+  bind_table = bind.table.68v2,
+  key_sub    = key.68v2,
+  bewell_id  = "68-tB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_68v2 <- attr(pcoa.68v2_raw, "pc1_label")
+pc2_lab_68v2 <- attr(pcoa.68v2_raw, "pc2_label")
+
+pcoa.68v2 <- pcoa.68v2_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 10(68-tB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.68v2 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.68v2, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.68v2 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (68) to recipient mice (tB)",
+    x = pc1_lab_68v2,
+    y = pc2_lab_68v2,
+    color = "Timepoint",
+    shape = "Origin"
+  )+ 
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-68tB.png", width = 7, height = 5)
+```
+
+#Bind table: mim11 (HONC79-tB)
+```{r}
+bind.table.79v2 <- bind_rows(bewell.79v2,mim11v2.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 11 (79-tB) with standardized timepoint labels
+```{r}
+# metadata
+key.79v2 <- key %>%
+  filter(experiment == "mimic 11", gavage == "Post-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.79v2_raw <- pcoa_df(
+  bind_table = bind.table.79v2,
+  key_sub    = key.79v2,
+  bewell_id  = "79-tB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_79v2 <- attr(pcoa.79v2_raw, "pc1_label")
+pc2_lab_79v2 <- attr(pcoa.79v2_raw, "pc2_label")
+
+pcoa.79v2 <- pcoa.79v2_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 11(79-tB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.79v2 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.79v2, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.79v2 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (79) to recipient mice (tB)",
+    x = pc1_lab_79v2,
+    y = pc2_lab_79v2,
+    color = "Timepoint",
+    shape = "Origin"
+  )+ 
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-79tB.png", width = 7, height = 5)
+```
+#Bind table: mim5 (HONC102-rB)
+```{r}
+bind.table.102v1 <- bind_rows(bewell.102v1,mim5v1.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 5 (102-rB) with standardized timepoint labels
+```{r}
+# metadata
+key.102v1 <- key %>%
+  filter(experiment == "mimic 5", gavage == "Pre-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.102v1_raw <- pcoa_df(
+  bind_table = bind.table.102v1,
+  key_sub    = key.102v1,
+  bewell_id  = "102-rB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_102v1 <- attr(pcoa.102v1_raw, "pc1_label")
+pc2_lab_102v1 <- attr(pcoa.102v1_raw, "pc2_label")
+
+pcoa.102v1 <- pcoa.102v1_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 5(102-rB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.102v1 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.102v1, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.102v1 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (102) to recipient mice (rB)",
+    x = pc1_lab_102v1,
+    y = pc2_lab_102v1,
+    color = "Timepoint",
+    shape = "Origin"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-102rB.png", width = 7, height = 5)
+```
+
+#Bind table: mim5 (HONC102-tB)
+```{r}
+bind.table.102v2 <- bind_rows(bewell.102v2,mim5v2.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 5 (102-rB) with standardized timepoint labels
+```{r}
+# metadata
+key.102v2 <- key %>%
+  filter(experiment == "mimic 5", gavage == "Post-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.102v2_raw <- pcoa_df(
+  bind_table = bind.table.102v2,
+  key_sub    = key.102v2,
+  bewell_id  = "102-tB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_102v2 <- attr(pcoa.102v2_raw, "pc1_label")
+pc2_lab_102v2 <- attr(pcoa.102v2_raw, "pc2_label")
+
+pcoa.102v2 <- pcoa.102v2_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 5(102-tB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.102v2 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.102v2, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.102v2 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+  scale_color_manual(values = muted_cols, drop = TRUE) +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (102) to recipient mice (tB)",
+    x = pc1_lab_102v2,
+    y = pc2_lab_102v2,
+    color = "Timepoint",
+    shape = "Origin"
+  )+theme(plot.title = element_text(hjust = 0.5))
+  
+
+ggsave("../figures/supplement-pcoa-102tB.png", width = 7, height = 5)
+```
+
+#Bind table: mim1 (HONC55-rB)
+```{r}
+bind.table.55v1 <- bind_rows(bewell.55v1,mim1v1.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 1 (55-rB) with standardized timepoint labels
+```{r}
+# metadata
+key.55v1 <- key %>%
+  filter(experiment == "mimic 1", gavage == "Pre-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.55v1_raw <- pcoa_df(
+  bind_table = bind.table.55v1,
+  key_sub    = key.55v1,
+  bewell_id  = "55-rB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_55v1 <- attr(pcoa.55v1_raw, "pc1_label")
+pc2_lab_55v1 <- attr(pcoa.55v1_raw, "pc2_label")
+
+pcoa.55v1 <- pcoa.55v1_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 1(55-rB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.55v1 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.55v1, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.55v1 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+  scale_color_manual(values = muted_cols, drop = TRUE) +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (55) to recipient mice (rB)",
+    x = pc1_lab_55v1,
+    y = pc2_lab_55v1,
+    color = "Timepoint",
+    shape = "Origin"
+  )+
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-55rB.png", width = 7, height = 5)
+```
+
+#Bind table: mim1 (HONC55-tB)
+```{r}
+bind.table.55v2 <- bind_rows(bewell.55v2,mim1v2.relabun) %>%
+  mutate(across(.cols = -sampleID, .fns = ~coalesce(., 0))) %>%
+  column_to_rownames("sampleID") %>%
+  as.matrix()
+```
+
+#Generate PCoA coordinates for Mimic 1 (55-tB) with standardized timepoint labels
+```{r}
+# metadata
+key.55v2 <- key %>%
+  filter(experiment == "mimic 1", gavage == "Post-BRB") %>%
+  select(sampleID, timepoint, gavage)
+
+time_levels <- c(
+  "Study Participant",
+  "Pre-antibiotics",
+  "Pre-gavage",
+  "First Anti-PD1/IgG Inj.",
+  "End of Study"
+)
+
+# START FRESH: run pcoa_df once, capture variance labels, then recode
+pcoa.55v2_raw <- pcoa_df(
+  bind_table = bind.table.55v2,
+  key_sub    = key.55v2,
+  bewell_id  = "55-tB",
+  bewell_timepoint_label = "Bewell"
+)
+
+# grab REAL variance labels BEFORE mutate drops attributes
+pc1_lab_55v2 <- attr(pcoa.55v2_raw, "pc1_label")
+pc2_lab_55v2 <- attr(pcoa.55v2_raw, "pc2_label")
+
+pcoa.55v2 <- pcoa.55v2_raw %>%
+  mutate(
+    # preserve ORIGINAL strings before recoding
+    timepoint_raw = trimws(tolower(as.character(timepoint))),
+    gavage_raw    = trimws(tolower(as.character(gavage))),
+
+    timepoint = case_when(
+      origin == "Human" ~ "Study Participant",
+      timepoint_raw == "baseline" ~ "Pre-antibiotics",
+      timepoint_raw %in% c("anti-pd1/igg", "antipd1/igg") ~ "First Anti-PD1/IgG Inj.",
+      timepoint_raw == "necropsy" ~ "End of Study",
+      timepoint_raw %in% c("gavage", "mc38") ~ "Pre-gavage",
+      # ONLY use gavage as fallback when timepoint is missing/blank
+      (is.na(timepoint_raw) | timepoint_raw == "") & gavage_raw %in% c("pre-brb", "post-brb") ~ "Pre-gavage",
+      TRUE ~ NA_character_
+    ),
+    timepoint = factor(timepoint, levels = time_levels)
+  )
+
+```
+
+#Plot mimic 1(55-tB) 
+```{r}
+muted_cols <- c(
+  "Study Participant"         = "#6FB5A5",
+  "Pre-antibiotics"           = "#9A9F6B",
+  "Pre-gavage"                = "#9CC4E4",
+  "First Anti-PD1/IgG Inj."   = "#D9908A",
+  "End of Study"              = "#C8A0D6"
+)
+
+# Centroids (mouse only)
+centroids <- pcoa.55v2 %>%
+  filter(origin == "Mouse") %>%
+  group_by(timepoint) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
+
+ggplot(pcoa.55v2, aes(PC1, PC2)) +
+
+  stat_ellipse(
+    data = pcoa.55v2 %>% filter(origin == "Mouse"),
+    aes(color = timepoint),
+    type = "norm",
+    level = 0.95,
+    alpha = 0.15,
+    size = 1,
+    show.legend = FALSE
+  ) +
+
+  geom_point(
+    data = centroids,
+    aes(color = timepoint),
+    shape = 4,
+    size = 5,
+    stroke = 1.5,
+    show.legend = FALSE
+  ) +
+
+  geom_point(aes(color = timepoint, shape = origin, size = origin)) +
+  scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
+  scale_color_manual(values = muted_cols, drop = TRUE) +
+
+  theme_classic(base_size = 8) +
+  coord_equal() +
+  labs(
+    title = "Distance from human donor (55) to recipient mice (tB)",
+    x = pc1_lab_55v2,
+    y = pc2_lab_55v2,
+    color = "Timepoint",
+    shape = "Origin"
+  )+theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("../figures/supplement-pcoa-55tB.png", width = 7, height = 5)
+  
+```
+
+
