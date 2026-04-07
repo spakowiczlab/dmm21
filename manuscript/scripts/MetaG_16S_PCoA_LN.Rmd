@@ -1165,7 +1165,7 @@ ggplot(pcoa.55v1, aes(PC1, PC2)) +
   )+
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-55rB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-55rB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim1 (HONC55-tB)
@@ -1240,7 +1240,7 @@ centroids <- pcoa.55v2 %>%
   group_by(timepoint) %>%
   summarize(PC1 = mean(PC1), PC2 = mean(PC2), .groups = "drop")
 
-ggplot(pcoa.55v2, aes(PC1, PC2)) +
+p <-ggplot(pcoa.55v2, aes(PC1, PC2)) +
 
   stat_ellipse(
     data = pcoa.55v2 %>% filter(origin == "Mouse"),
