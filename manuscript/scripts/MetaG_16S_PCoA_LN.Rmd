@@ -12,6 +12,8 @@ getwd()
 
 ```{r}
 install.packages("here")
+install.packages("svglite")
+install.packages("systemfonts")
 ```
 
 ```{r}
@@ -19,6 +21,18 @@ library(tidyverse)
 library(vegan)
 library(dplyr)
 library(here) 
+
+```
+
+```{r}
+bewell.relabun <- read.csv("../data/BEWELL/RelAbun_gen.csv")
+seqtab.mimic <- readRDS("../data/mimic/2023-07-26_16S-seqtab.rds") %>%
+  as.data.frame()
+taxa.mimic <- readRDS("../data/mimic/2023-07-26_16S-taxa.rds") %>%
+  as.data.frame()
+key <- read_csv("../data/mimic/mimic16S-key.csv") %>%
+  select(-`...1`)
+group.spread1 <- read_csv("../data/mimic/group_spread.csv")
 ```
 
 
@@ -169,7 +183,7 @@ scale_size_manual(values = c(Human = 4, Mouse = 3), guide = "none") +
   theme(plot.title = element_text(hjust = 0.5))
 
 
-ggsave("../figures/supplement-pcoa-85rB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-85rB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim12 (HONC85-tB)
@@ -275,7 +289,7 @@ ggplot(pcoa.85v2, aes(PC1, PC2)) +
     shape = "Origin"
   )
 
-ggsave("../figures/supplement-pcoa-85tB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-85tB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim13 (HONC84-rB)
@@ -489,7 +503,7 @@ ggplot(pcoa.84v2, aes(PC1, PC2)) +
   )+ 
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-84tB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-84tB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim10 (HONC68-rB)
@@ -599,7 +613,7 @@ ggplot(pcoa.68v1, aes(PC1, PC2)) +
   )+ 
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-68rB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-68rB.svg", width = 7, height = 5)
 ```
 
 
@@ -710,7 +724,7 @@ ggplot(pcoa.68v2, aes(PC1, PC2)) +
   )+ 
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-68tB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-68tB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim11 (HONC79-tB)
@@ -820,7 +834,7 @@ ggplot(pcoa.79v2, aes(PC1, PC2)) +
   )+ 
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-79tB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-79tB.svg", width = 7, height = 5)
 ```
 #Bind table: mim5 (HONC102-rB)
 ```{r}
@@ -929,7 +943,7 @@ ggplot(pcoa.102v1, aes(PC1, PC2)) +
   ) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-102rB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-102rB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim5 (HONC102-tB)
@@ -1040,7 +1054,7 @@ ggplot(pcoa.102v2, aes(PC1, PC2)) +
   )+theme(plot.title = element_text(hjust = 0.5))
   
 
-ggsave("../figures/supplement-pcoa-102tB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-102tB.svg", width = 7, height = 5)
 ```
 
 #Bind table: mim1 (HONC55-rB)
@@ -1261,7 +1275,7 @@ ggplot(pcoa.55v2, aes(PC1, PC2)) +
     shape = "Origin"
   )+theme(plot.title = element_text(hjust = 0.5))
 
-ggsave("../figures/supplement-pcoa-55tB.png", width = 7, height = 5)
+ggsave("../figures/supplement-pcoa-55tB.svg", width = 7, height = 5)
   
 ```
 
