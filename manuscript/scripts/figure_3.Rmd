@@ -19,7 +19,7 @@ library(viridis)
 ```{r}
 load("../data/figure-data/bardat_Bo_BW.rda")
 load("../data/figure-data/tvol_m10.rda")
-
+load("../data/figure-data/tvol_m1819.rda")
 load("../data/figure-data/fracresponse_blautia-gavage.rda")
 load("../data/figure-data/boxdat_mimic.rda")
 load("../data/figure-data/longmods_mimic-heatmap.rda")
@@ -137,76 +137,35 @@ ggsave("../figures/Fig3C-wide.svg",
 
 
 ```{r}
-mimic1819.means <- mimic1819.means %>%
+mimic1819.means_df <- mimic1819.means$plotdat
+
+mimic1819.means_df <- mimic1819.means_df %>%
   mutate(Supplement = factor(Supplement, levels = c("Normal", "Blautia")))
 
-mimic1819.means %>%
+mimic1819.means_df %>%
   ggplot(aes(x = days.from.injection, y = mean)) +
   geom_line(aes(group = treatment.group,
                 color = Supplement,
                 linetype = Treatment), 
-            lwd = 1) + 
-  geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) + 
+            linewidth = 1) + 
   geom_point(aes(color = Supplement)) +
   labs(x = "Days from Tumor Injection", 
        y = expression("Mean Tumor Volume ("~mm^3~")"),
        color = "Sample") +  
-  theme_bw()+
+  theme_bw() +
   scale_color_manual(
     values = c("#d95f02", "#7570b3"),
     labels = c("85", "85 + Blautia")
-  )+
-    scale_x_continuous(limits = c(0, max(mimic1819.means$days.from.injection) + 1))
+  ) +
+  scale_x_continuous(
+    limits = c(0, max(mimic1819.means_df$days.from.injection) + 1)
+  )
 
-                           
 ggsave("../figures/meantumorvolume_mim1819_lineplot.png", 
        height = 5, width = 7)
+
 ggsave("../figures/Fig3E.svg", 
        height = 3, width = 5)
-
-```
-
-
-```{r}
-# Step 1: Filter data for the last day (21 days)
-last_day_data <- mimic1819.means %>% filter(days.from.injection == 21)
-
-# Identify unique treatment groups in the last_day_data
-treatment_groups <- unique(last_day_data$treatment.group)
-
-# Initialize an empty data frame to store p-values
-p_values <- data.frame()
-
-# Loop through each unique pair of treatment groups
-for (i in 1:(length(treatment_groups) - 1)) {
-  for (j in (i + 1):length(treatment_groups)) {
-    # Extract mean values for each treatment group
-    group1 <- last_day_data %>% filter(treatment.group == treatment_groups[i]) %>% pull(mean)
-    group2 <- last_day_data %>% filter(treatment.group == treatment_groups[j]) %>% pull(mean)
-    
-    # Check if both groups have at least two observations
-    if (length(group1) >= 1 && length(group2) >= 2) {
-      # Perform t-test and store p-value
-      t_test_result <- t.test(group1, group2)
-      
-      # Append the comparison and p-value to the p_values data frame
-      p_values <- rbind(p_values, data.frame(
-        Comparison = paste(treatment_groups[i], "vs", treatment_groups[j]),
-        p_value = t_test_result$p.value
-      ))
-    } else {
-      # Append a message for groups with insufficient data
-      p_values <- rbind(p_values, data.frame(
-        Comparison = paste(treatment_groups[i], "vs", treatment_groups[j]),
-        p_value = NA  # Mark as NA if insufficient data
-      ))
-    }
-  }
-}
-
-# View the resulting p-values data frame
-print(p_values)
-
 
 ```
 
