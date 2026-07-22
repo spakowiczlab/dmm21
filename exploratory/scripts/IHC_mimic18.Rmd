@@ -1,0 +1,140 @@
+---
+title: "IHC"
+author: "Shiva Jahanbakhshi"
+date: "2026-07-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(tidyverse)
+
+IHC_Spleen <- IHC_Spleen %>%
+  mutate(
+    Group = case_when(
+      str_detect(Image, "AntiPD1_85v1\\+Blautia") ~ "AntiPD1+Blautia",
+      str_detect(Image, "AntiPD1_85v1") ~ "AntiPD1",
+      str_detect(Image, "IgG_85v1\\+Blautia") ~ "IgG+Blautia",
+      str_detect(Image, "IgG_85v1") ~ "IgG"
+    ),
+    Positive_mm2 = `Num Positive per mm^2`
+  )
+```
+```{r}
+ggplot(IHC_Spleen,
+       aes(Group, Positive_mm2, fill = Group)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, size = 3) +
+  theme_classic() +
+  ylab(expression(CD8^"+"~cells/mm^2)) +
+  xlab("")
+```
+```{r}
+IHC_colon <- IHC_colon %>%
+  mutate(
+    Mouse = str_extract(Image, "m\\dc\\d"),
+    Group = case_when(
+      str_detect(Image, "AntiPD1_85v1\\+Blautia") ~ "AntiPD1+Blautia",
+      str_detect(Image, "AntiPD1_85v1") ~ "AntiPD1",
+      str_detect(Image, "IgG_85v1\\+Blautia") ~ "IgG+Blautia",
+      str_detect(Image, "IgG_85v1") ~ "IgG"
+    ),
+    Positive_mm2 = `Num Positive per mm^2`
+  )
+```
+
+```{r}
+colon_mouse <- IHC_colon %>%
+  group_by(Mouse, Group) %>%
+  summarise(
+    Positive_mm2 = mean(Positive_mm2),
+    n_ROI = n(),
+    .groups = "drop"
+  )
+```
+
+```{r}
+colon_mouse
+```
+
+```{r}
+colon_mouse$Group <- factor(
+  colon_mouse$Group,
+  levels = c("IgG", "IgG+Blautia", "AntiPD1", "AntiPD1+Blautia")
+)
+
+ggplot(colon_mouse,
+       aes(Group, Positive_mm2, fill = Group)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, size = 3) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  ylab(expression(CD11c^"+"~cells/mm^2)) +
+  xlab("Treatment")
+
+ggsave("../figures/IHC_colon.svg",
+       height = 6, width = 7)
+
+```
+```{r}
+colon_mouse <- colon_mouse %>%
+  mutate(
+    Antibody = ifelse(grepl("AntiPD1", Group), "AntiPD1", "IgG"),
+    Blautia = ifelse(grepl("Blautia", Group), "Yes", "No")
+  )
+
+model <- lm(Positive_mm2 ~ Antibody * Blautia, data = colon_mouse)
+
+anova(model)
+summary(model)
+plot(model)
+model_log <- lm(log1p(Positive_mm2) ~ Antibody * Blautia,
+                data = colon_mouse)
+
+anova(model_log)
+
+library(emmeans)
+
+emmeans(model_log, pairwise ~ Antibody * Blautia,
+        adjust = "tukey")
+```
+
+
+```{r}
+library(patchwork)
+library(ggplot2)
+
+p1 <- ggplot(IHC_Spleen,
+             aes(x = Group, y = Positive_mm2, fill = Group)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, size = 1) +
+  theme_classic(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  ylab(expression(CD8^"+"~cells/mm^2)) +
+  xlab("") +
+  ggtitle("Spleen")
+
+p2 <- ggplot(colon_mouse,
+             aes(x = Group, y = Positive_mm2, fill = Group)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, size = 1) +
+  theme_classic(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  ylab(expression(CD11c^"+"~cells/mm^2)) +
+  xlab("") +
+  ggtitle("Colon")
+
+p1 + p2
+```
+
