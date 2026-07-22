@@ -1,0 +1,302 @@
+---
+title: "Phylogenetic relatedness between B.mas, B.ob, A.rectal"
+author: "Shiva Jahanbakhshi"
+date: "2026-07-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Load packages and GTDB files
+```{r}
+library(tidyverse)
+library(readr)
+library(ape)
+library(stringr)
+
+metadata <- read_tsv("../data/bac120_metadata.tsv.gz")
+taxonomy <- read_tsv(
+  "../data/bac120_taxonomy.tsv.gz",
+  col_names = FALSE
+)
+
+tree <- read.tree("../data/bac120.tree.gz")
+
+```
+
+## Extract GTDB taxonomy levels
+```{r}
+metadata <- metadata %>%
+  mutate(
+    gtdb_family = str_extract(
+      gtdb_taxonomy,
+      "f__[^;]+"
+    ),
+    gtdb_genus = str_extract(
+      gtdb_taxonomy,
+      "g__[^;]+"
+    ),
+    gtdb_species = str_extract(
+      gtdb_taxonomy,
+      "s__[^;]+$"
+    )
+  )
+```
+
+## Find the GTDB names of the three target species
+```{r}
+target_metadata <- metadata %>%
+  filter(
+    str_detect(
+      ncbi_organism_name,
+      regex(
+        paste(
+          "Blautia massiliensis",
+          "Blautia obeum",
+          "Agathobacter rectalis",
+          sep = "|"
+        ),
+        ignore_case = TRUE
+      )
+    )
+  ) %>%
+  select(
+    accession,
+    ncbi_organism_name,
+    ncbi_strain_identifiers,
+    gtdb_species,
+    gtdb_representative
+  )
+
+target_metadata
+
+#Display the unique NCBI-to-GTDB mappings
+
+target_metadata %>%
+  select(
+    ncbi_organism_name,
+    gtdb_species
+  ) %>%
+  distinct()
+
+```
+```{r}
+## Define the GTDB species names of the three targets
+
+target_species <- target_metadata %>%
+  filter(
+    gtdb_representative %in% c(TRUE, "t", "TRUE")
+  ) %>%
+  pull(gtdb_species) %>%
+  unique()
+
+target_species
+```
+
+
+## Find the representative genomes
+```{r}
+target_genomes <- metadata %>%
+  filter(
+    gtdb_species %in% target_species,
+    gtdb_representative %in% c(TRUE, "t", "TRUE")
+  ) %>%
+  select(
+    accession,
+    ncbi_organism_name,
+    gtdb_species
+  )
+
+target_genomes 
+
+#Define the selected accessions in a consistent order
+
+target_tips <- c(
+  "RS_GCF_025147765.1",  # Blautia obeum
+  "RS_GCF_000020605.1",  # Agathobacter rectalis
+  "RS_GCF_020687435.1"   # Blautia massiliensis
+)
+
+target_names <- c(
+  "B. obeum",
+  "A. rectalis",
+  "B. massiliensis"
+)
+
+target_colors <- c(
+  "#009E73",
+  "#0072B2",
+  "#E69F00"
+)
+
+#Confirm that all three genomes are in the GTDB tree
+
+target_tips %in% tree$tip.label
+```
+#all representative Lachnospiraceae genomes
+## Extract all representative genomes in the family
+
+```{r}
+# Get all representative Lachnospiraceae genomes
+lachno_df <- metadata %>%
+  filter(
+    gtdb_family == "f__Lachnospiraceae",
+    gtdb_representative %in% c("t", "TRUE", TRUE)
+  )
+
+# Keep only accessions that also occur in the tree
+lachno_tips <- intersect(
+  lachno_df$accession,
+  tree$tip.label
+)
+
+length(lachno_tips)
+head(lachno_tips)
+
+#prune
+lachno_tree <- keep.tip(
+  tree,
+  lachno_tips
+)
+
+length(lachno_tree$tip.label)
+
+# keep the target tips with the prefixes
+target_tips <- c(
+  "RS_GCF_025147765.1",  # Blautia obeum
+  "RS_GCF_000020605.1",  # Agathobacter rectalis
+  "RS_GCF_020687435.1"   # Blautia massiliensis / GTDB B. fusiformis
+)
+
+target_tips %in% tree$tip.label
+```
+## Find the locations of the three targets
+```{r}
+target_positions_all <- match(
+  target_tips,
+  lachno_tree$tip.label
+)
+
+target_positions_all
+```
+
+## Plot all Lachnospiraceae representatives
+```{r}
+pdf(
+  "Lachnospiraceae_all_representatives.pdf",
+  width = 11,
+  height = 11
+)
+
+par(mar = rep(0.5, 4))
+
+plot(
+  lachno_tree,
+  type = "fan",
+  show.tip.label = FALSE,
+  show.node.label = FALSE,
+  edge.width = 0.6,
+  no.margin = TRUE
+)
+
+tiplabels(
+  tip = target_positions_all,
+  pch = 21,
+  bg = target_colors,
+  col = "black",
+  cex = 1.5
+)
+
+tiplabels(
+  tip = target_positions_all,
+  text = target_names,
+  frame = "none",
+  col = target_colors,
+  font = 3,
+  cex = 0.85,
+  adj = c(-0.05, 0.5)
+)
+
+dev.off()
+```
+```{r}
+genus_representatives <- metadata %>%
+  filter(
+    gtdb_family == "f__Lachnospiraceae",
+    gtdb_representative == "t",
+    !is.na(gtdb_genus),
+    gtdb_genus != "g__"
+  ) %>%
+  arrange(
+    gtdb_genus,
+    accession
+  ) %>%
+  group_by(gtdb_genus) %>%
+  slice(1) %>%
+  ungroup() %>%
+  pull(accession) %>%
+  intersect(tree$tip.label)
+
+tips_to_keep <- unique(
+  c(
+    genus_representatives,
+    target_tips
+  )
+)
+
+lachno_genus_tree <- keep.tip(
+  tree,
+  tips_to_keep
+)
+
+length(lachno_genus_tree$tip.label)
+```
+```{r}
+target_positions_genus <- match(
+  target_tips,
+  lachno_genus_tree$tip.label
+)
+
+target_positions_genus
+```
+```{r}
+pdf(
+  "Lachnospiraceae_genus_representative_tree.pdf",
+  width = 12,
+  height = 12
+)
+
+par(mar = rep(1, 4))
+
+plot(
+  lachno_genus_tree,
+  type = "fan",
+  show.tip.label = FALSE,
+  show.node.label = FALSE,
+  use.edge.length = FALSE,
+  edge.width = 0.7,
+  no.margin = TRUE
+)
+
+tiplabels(
+  tip = target_positions_genus,
+  pch = 21,
+  bg = target_colors,
+  col = "black",
+  cex = 1.7
+)
+
+tiplabels(
+  tip = target_positions_genus,
+  text = target_names,
+  frame = "none",
+  col = target_colors,
+  font = 3,
+  cex = 1,
+  adj = c(-0.4, 0.5)
+)
+
+dev.off()
+```
+
