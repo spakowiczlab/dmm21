@@ -1,0 +1,163 @@
+---
+title: "diversity"
+author: "Caroline Wheeler"
+date: "2/14/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(reshape2)
+```
+
+read in data w/o row names
+```{r}
+spec <- read.csv("../../exploratory/data/BEWELL/RelAbun_spec.csv", row.names = 1)
+```
+
+
+Summarize all microbes for visualization and Filter to the ptIDs that are in the mimic longitudinal modeling heatmap. 
+```{r}
+idsofinterest <- c(102, 55, 84, 85, 68, 79)
+
+aml <- spec %>%
+  rownames_to_column("id") %>%
+  separate("id", into = c("ptid", "study_visit")) %>%
+  gather(-ptid, -study_visit, key = "microbe", value = "relAbun") %>%
+  mutate(study_visit = fct_relevel(study_visit, c("rP", "tP", "rB", "tB"))) %>%
+  mutate(relAbun = as.numeric(relAbun)) %>%
+  filter(ptid %in% idsofinterest)
+
+```
+
+
+Create a variable for all BRB-enriched microbes
+```{r}
+microbesofinterest <- c("s__Blautia_obeum",
+                        "s__Roseburia_sp_CAG_309")
+
+aml %>%
+  filter(microbe %in% microbesofinterest) %>%
+  group_by(ptid, study_visit) %>%
+  summarize(BRB.enrich.abun = sum(relAbun))
+
+```
+
+
+
+
+```{r}
+aml %>%
+  filter(microbe == "s__Blautia_obeum") %>%
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = study_visit), show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance") +
+  facet_wrap(~ptid, nrow = 1)
+
+ggsave("../../exploratory/figures/Blautia_obeum_abundance_bar_all.png",
+       height = 7.5, width = 10)
+```
+```{r}
+aml %>%
+  filter(microbe == "s__Blautia_obeum", ptid == 85) %>%  # Filter for ptid == 85
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = study_visit), show.legend = FALSE) +
+  scale_fill_viridis_d(direction = -1) + 
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance of Lachnospiraceae") +
+  facet_wrap(~ptid, nrow = 1)
+
+```
+
+```{r}
+microbesofinterest <- c("s__Roseburia_sp_CAG_309",
+                        "s__Lactobacillus_animalis",
+                        "s__Blautia_obeum",
+                        "s__Lachnospira_pectinoschiza",
+                        "s__Parabacteroides_goldsteinii")
+
+aml %>%
+  filter(microbe %in% microbesofinterest) %>%
+  filter(study_visit %in% c("rB", "tB")) %>%
+  mutate(microbe = str_replace_all(microbe, pattern = c("^s__" = "", "_" = " "))) %>% 
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = microbe)) +
+  scale_fill_viridis_d(option = "cividis") + 
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance of Lachnospiraceae") +
+  facet_wrap(~ptid, nrow = 1)
+
+ggsave("../../exploratory/figures/BRB-enriched-microbe.png",
+       height = 7.5, width = 10)
+ggsave("../../exploratory/figures/BRB-enriched-microbe.svg",
+       height = 5, width = 7)
+ggsave("../figures/panels/fig3B_lachnospiraceae-by-participant.svg",
+       height = 5, width = 7)
+```
+```{r}
+aml %>%
+  filter(microbe %in% microbesofinterest, ptid == 85) %>%
+  filter(study_visit %in% c("rB", "tB")) %>%
+  mutate(microbe = str_replace_all(microbe, pattern = c("^s__" = "", "_" = " "))) %>% 
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = microbe)) +
+  scale_fill_viridis_d(option = "cividis") + 
+  theme_bw() +
+  labs(x = "Sample",
+       y = "Relative Abundance of Lachnospiraceae") +
+  facet_wrap(~ptid, nrow = 1)
+
+ggsave("../../exploratory/figures/fig4-85.svg",
+       height = 3, width = 5)
+ggsave("../figures/panels/fig4A_participant85-lachnospiraceae.svg",
+       height = 3, width = 5)
+```
+
+```{r}
+plotMicrobe <- function(df, name){
+  p <- 
+    df %>%
+    filter(microbe == name) %>%
+    ggplot(aes(x = study_visit, y = relAbun)) +
+    geom_bar(stat = "identity", aes(fill = study_visit), show.legend = FALSE) +
+    scale_fill_viridis_d() +
+    theme_bw() +
+    labs(x = "",
+         y = "Relative Abundance",
+         subtitle = name) +
+    facet_wrap(~ptid)
+  p
+
+ggsave(paste0("../../exploratory/figures/", name, "_abundance_bar_all.png"),
+       height = 7.5, width = 10)
+  
+}
+
+plotMicrobe(aml, "s__Roseburia_sp_CAG_309")
+```
+
+```{r}
+aml %>%
+  filter(microbe == "s__Blautia_obeum") %>%
+  ggplot(aes(x = study_visit, y = relAbun)) +
+  geom_bar(stat = "identity", aes(fill = study_visit), show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  theme_bw() +
+  labs(x = "",
+       y = "Relative Abundance",
+       subtitle = "Blautia obeum") +
+  facet_wrap(~ptid)
+
+ggsave("../../exploratory/figures/Blautia_obeum_abundance_bar_all.png",
+       height = 7.5, width = 10)
+```
+
+
+

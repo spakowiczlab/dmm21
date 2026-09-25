@@ -1,3 +1,8 @@
+#' Flow-cytometry percentages from the mimic endpoint table.
+#'
+#' @param flopath Path to the FlowJo export.
+#' @return Long data with \code{Gavage} (pre/post black raspberry),
+#'   \code{Treatment}, \code{Marker}, and \code{Percent}.
 mimicBoxFlo <- function(flopath){
   x <- read_csv(flopath) %>%
     rename("mouse.cage" = "...1") %>%

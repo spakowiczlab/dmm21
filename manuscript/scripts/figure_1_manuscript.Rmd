@@ -1,0 +1,118 @@
+---
+title: "Figure 1 manuscript panels (rat black-raspberry 16S)"
+output: html_document
+---
+
+Manuscript-facing copy of `figure_1.Rmd`. The original notebook is unchanged and still contains alternate volcano and PCA layouts. Knit this file from `manuscript/scripts/`. It reads the objects written by `prepare-figure-data.R` and writes one file per panel to `manuscript/figures/panels/`.
+
+Panel letters follow the submitted manuscript. Figure 1A is a study schematic and is not drawn here.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggtext)
+library(ggfortify)
+library(FactoMineR)
+library(ggrepel)
+library(ggpubr)
+```
+
+```{r}
+load("../data/figure-data/desres_rberry.rda")
+load("../data/figure-data/pca_rberry.rda")
+load("../data/figure-data/dist_rberry.rda")
+```
+
+```{r fig1B-pca}
+PCA_label_plot <-
+  autoplot(rber.pca$PCA, data = rber.pca$GroupLabs, colour = "GroupID",
+           label = FALSE, label.size = 3, shape = TRUE, frame = TRUE,
+           frame.type = "convex") +
+  theme_bw(base_size = 8.8) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() +
+  theme(
+    axis.text = element_text(size = 7),
+    legend.text = element_text(size = 8.8),
+    legend.title = element_blank(),
+    legend.key.size = unit(0.75, "lines"),
+    legend.position = "top"
+  ) +
+  coord_cartesian(xlim = c(-1, 0.5), ylim = c(-0.5, 1)) +
+  annotate("text", x = -0.75, y = 1,
+           label = paste0("p-value = ", rber_dist$adonis.p.val[1]))
+
+ggsave("../figures/panels/fig1B_rat-16S-pca.svg", PCA_label_plot,
+       height = 2.5, width = 2)
+```
+
+```{r fig1B-distance}
+p <- rber_dist %>%
+  ggplot(aes(x = GroupID, y = Distance, fill = GroupID)) +
+  geom_boxplot() +
+  theme_bw() +
+  scale_fill_viridis_d(alpha = 0.5) +
+  theme(axis.text = element_text(size = 7),
+        legend.position = "none") +
+  stat_compare_means(method = "t.test")
+
+ggsave("../figures/panels/fig1B_rat-distance-to-centroid.svg", p,
+       height = 2.2, width = 2)
+```
+
+```{r fig1C-volcano}
+rber.desres %>%
+  mutate(Tax.Sig = ifelse(padj < .05, TaxLev, NA),
+         class.dum = ifelse(padj < 0.05, Taxa, NA),
+         class.smart = if_else(grepl("g_uncl|sensu", class.dum), NA, class.dum),
+         class.smart = str_replace(class.smart, "_", " ")) %>%
+  ggplot(aes(x = log2FoldChange, y = -log(padj), color = Tax.Sig, label = class.smart)) +
+  geom_point() +
+  geom_hline(yintercept = -log(0.05), color = "red", linetype = "dotted", linewidth = 0.75) +
+  geom_vline(xintercept = c(-4, 4), color = "red", linetype = "dotted", linewidth = 0.75) +
+  guides(color = guide_legend("Taxonomic\nRank")) +
+  geom_text_repel(show.legend = FALSE, size = 6.25) +
+  theme_bw(base_size = 20) +
+  scale_color_brewer(palette = "Dark2", na.value = "gray50",
+                     breaks = c("Phylum", "Class", "Order", "Family", "Genus")) +
+  theme(legend.position = c(0.97, 0.05),
+        legend.justification = c("right", "bottom"),
+        legend.box.just = "right",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 18, hjust = 0.5),
+        legend.key.width = unit(0.1, "cm")) +
+  xlim(-8, 8)
+
+ggsave("../figures/panels/fig1C_rat-taxon-volcano.svg", height = 5, width = 7)
+
+write_csv(rber.desres, "../tables/Supp-Table-S1_rat-volcano.csv")
+```
+
+```{r fig1D-effect-size}
+brb.sig <- rber.desres %>% filter(padj < .05)
+
+brb.sig %>%
+  mutate(Taxa = gsub("_", " ", gsub("g_", "", Taxa))) %>%
+  ggplot(aes(x = log2FoldChange, y = reorder(Taxa, log2FoldChange), fill = TaxLev)) +
+  geom_bar(stat = "identity") +
+  theme_bw(base_size = 18) +
+  ylab("") +
+  scale_fill_brewer(palette = "Dark2",
+                    breaks = c("Phylum", "Class", "Order", "Family", "Genus")) +
+  labs(fill = "Taxonomic\nRank") +
+  theme(legend.title = element_text(size = 18, hjust = 0.5),
+        legend.position = c(0.05, 0.95),
+        legend.justification = c("left", "top"),
+        legend.box.just = "left",
+        legend.margin = margin(3, 3, 3, 3),
+        legend.box.background = element_rect(color = "black", linewidth = 0.25),
+        legend.box.margin = margin(2, 2, 2, 2),
+        legend.text = element_text(size = 16),
+        legend.key.width = unit(0.6, "cm")) +
+  scale_y_discrete(expand = expansion(add = c(0.75, 0.75)))
+
+ggsave("../figures/panels/fig1D_rat-effect-sizes.svg", height = 5, width = 7)
+```

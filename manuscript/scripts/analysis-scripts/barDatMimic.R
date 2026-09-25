@@ -1,3 +1,10 @@
+#' Roseburia relative abundance in mimic 10.
+#'
+#' @param seqtab Sample-by-ASV count matrix.
+#' @param tax ASV taxonomy.
+#' @param key Sample key with \code{experiment}, \code{timepoint},
+#'   \code{gavage}, \code{treatment}, and \code{sampleID}.
+#' @return Genus-level Roseburia abundance at baseline and necropsy.
 barDatMimic <- function(seqtab, tax, key){
   
   taxa.spread <- tax %>%

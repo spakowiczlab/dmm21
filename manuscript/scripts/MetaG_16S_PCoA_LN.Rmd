@@ -11,17 +11,12 @@ getwd()
 
 
 ```{r}
-install.packages("here")
-install.packages("svglite")
-install.packages("systemfonts")
-```
-
-```{r}
 library(tidyverse)
 library(vegan)
 library(dplyr)
-library(here) 
-
+library(here)
+library(svglite)
+library(systemfonts)
 ```
 
 ```{r}

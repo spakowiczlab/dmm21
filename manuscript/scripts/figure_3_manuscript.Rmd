@@ -1,0 +1,71 @@
+---
+title: "Figure 3 manuscript panels (participant stool transfer)"
+output: html_document
+---
+
+Manuscript-facing copy of the participant-stool transfer analyses in `figure_3.Rmd`. The original notebook is unchanged.
+
+In the submitted figure, the mimic-10 tumor-volume curves are panel A and the mixed-model heatmap is panel D. The antibiotics timeline and mouse icons on panel A were added outside R. Panel B is drawn by `mimic_gavaged-sample_barplots.Rmd`. Panel C is drawn by `MetaG_16S_PCoA_LN.Rmd`.
+
+Knit from `manuscript/scripts/`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggtext)
+library(viridis)
+```
+
+```{r}
+load("../data/figure-data/tvol_m10.rda")
+load("../data/figure-data/boxdat_mimic.rda")
+load("../data/figure-data/longmods_mimic-heatmap.rda")
+```
+
+```{r tumor-volume}
+mimic10.means %>%
+  mutate(Gavage = if_else(grepl("v1", treatment.group), "Pre-BRB", "Post-BRB"),
+         Treatment = if_else(grepl("Anti", treatment.group), "Anti-PD1", "IgG"),
+         Gavage = fct_relevel(Gavage, c("Pre-BRB"))) %>%
+  ggplot(aes(x = days.from.injection, y = mean)) +
+  geom_line(aes(group = treatment.group, color = Gavage, linetype = Treatment),
+            position = position_dodge(width = .5), lwd = 1) +
+  geom_point(aes(color = Gavage), position = position_dodge(width = .5)) +
+  scale_color_viridis_d(direction = -1) +
+  geom_errorbar(aes(ymin = lwr, ymax = upr, color = Gavage),
+                width = 1, position = position_dodge(width = .5), lwd = 1) +
+  labs(x = "Days from Tumor Injection",
+       y = expression("Tumor volume ("~mm^3~")")) +
+  theme_minimal(base_size = 20) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.background = element_blank(),
+        axis.line = element_line()) +
+  scale_y_continuous(position = "right")
+
+ggsave("../figures/panels/fig3A_mimic10-tumor-volume.svg", height = 3.5, width = 9)
+```
+
+```{r lme-heatmap}
+mimic.longmods %>%
+  filter(term.adj %in% c("Anti-PD1", "Gavage")) %>%
+  mutate(Combined_ID2 = gsub(".*\\(([^)]+)\\).*", "\\1", `Combined ID`)) %>%
+  mutate(Combined_ID2 = case_when(
+    Combined_ID2 == "DL081" ~ "Control-NR",
+    Combined_ID2 == "DL017" ~ "Control-R",
+    Combined_ID2 == "Control-NR" ~ "Control-R",
+    Combined_ID2 == "Control-R" ~ "Control-NR",
+    TRUE ~ Combined_ID2
+  )) %>%
+  ggplot(aes(x = Combined_ID2, y = term.adj, fill = estimate, alpha = sig.flag)) +
+  geom_tile(color = "black") +
+  scale_fill_viridis(option = "magma") +
+  coord_fixed() +
+  guides(alpha = "none") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
+  labs(x = "Test Microbe (Sample ID)", y = "")
+
+ggsave("../figures/panels/fig3D_lme-heatmap.svg", height = 4, width = 8)
+write_csv(mimic.longmods, "../tables/Supp-Table-S4_model-summary-values.csv")
+```

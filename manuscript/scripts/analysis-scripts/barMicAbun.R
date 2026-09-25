@@ -1,3 +1,9 @@
+#' Blautia obeum abundance in BE WELL participants 84 and 102.
+#'
+#' @param metout Long relative-abundance table with taxonomy, subject, and
+#'   visit columns.
+#' @return Abundance of \code{s__Blautia_obeum} at each visit, labeled
+#'   pre/post placebo or pre/post black raspberry.
 barMicAbun <- function(metout){
   tmp <- metout %>%
     select(-Alternative.Tax, -TaxNum) %>%

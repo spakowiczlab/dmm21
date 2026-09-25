@@ -1,3 +1,11 @@
+#' Sample groups for the rat black-raspberry feeding study.
+#'
+#' Reads \code{../data/rberry/groups.xlsx} and
+#' \code{../data/rberry/counts-per-sample.csv}, keeps the black-raspberry and
+#' NMBA diets, and drops sample RB013.
+#'
+#' @return A data frame of \code{sample} and \code{group}. \code{group} is
+#'   releveled so \code{nmba} is the reference.
 formatRBgroups <- function(){
   groups.xl <- read_xlsx("../data/rberry/groups.xlsx")
   groups.id <- read.csv("../data/rberry/counts-per-sample.csv")

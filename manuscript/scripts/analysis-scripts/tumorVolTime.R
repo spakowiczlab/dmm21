@@ -1,3 +1,10 @@
+#' Mean tumor volume over time in mimic 10.
+#'
+#' @param allexp Tumor measurements for every mimic experiment, including
+#'   \code{experiment}, \code{treatment}, \code{microbiome.sample},
+#'   \code{days.from.injection}, and \code{tumor.volume}.
+#' @return Mean volume and a mean-plus-or-minus-sd ribbon for each treatment
+#'   group and day. The lower ribbon edge is truncated at zero.
 tumorVolTime <- function(allexp){
   tmp <- allexp %>%
     filter(experiment == "mimic10") %>%

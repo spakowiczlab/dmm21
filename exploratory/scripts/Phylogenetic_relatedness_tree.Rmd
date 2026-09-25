@@ -9,12 +9,22 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ## Load packages and GTDB files
+
+Figure 5A uses the bacterial reference tree from [GTDB release 232](https://data.gtdb.ecogenomic.org/releases/release232/232.0/) (15 April 2026). Those files are not in this repository. The metadata file is 276 MB, which is over GitHub's file-size limit. Download the release 232 files and save them in `exploratory/data/` under the names this notebook reads:
+
+- [bac120_r232.tree.gz](https://data.gtdb.ecogenomic.org/releases/release232/232.0/bac120_r232.tree.gz) as `bac120.tree.gz` (2.3 MB)
+- [bac120_taxonomy_r232.tsv.gz](https://data.gtdb.ecogenomic.org/releases/release232/232.0/bac120_taxonomy_r232.tsv.gz) as `bac120_taxonomy.tsv.gz` (9.4 MB)
+- [bac120_metadata_r232.tsv.gz](https://data.gtdb.ecogenomic.org/releases/release232/232.0/bac120_metadata_r232.tsv.gz) as `bac120_metadata.tsv.gz` (276 MB)
+
+The three genomes marked on the tree, `RS_GCF_025147765.1` (*B. obeum*), `RS_GCF_000020605.1` (*A. rectalis*), and `RS_GCF_020687435.1` (*B. massiliensis*), are tips in this release. `/releases/latest/` also serves these files under the unversioned names, and it is release 232 as of September 2026. That directory will change when GTDB publishes the next release, so use the release 232 links above.
+
 ```{r}
 library(tidyverse)
 library(readr)
 library(ape)
 library(stringr)
 
+# GTDB release 232. See the download links in the section above.
 metadata <- read_tsv("../data/bac120_metadata.tsv.gz")
 taxonomy <- read_tsv(
   "../data/bac120_taxonomy.tsv.gz",
@@ -298,5 +308,56 @@ tiplabels(
 )
 
 dev.off()
+```
+
+```{r fig5A}
+# Rectangular tree for submitted Figure 5A. The fan PDFs above are the working layouts.
+ordered <- reorder(ladderize(lachno_genus_tree), "cladewise")
+edge <- ordered$edge
+tip_y <- numeric(Ntip(ordered) + Nnode(ordered))
+tips <- edge[, 2][edge[, 2] <= Ntip(ordered)]
+tip_y[tips] <- seq_along(tips)
+children <- split(edge[, 2], edge[, 1])
+for (parent in rev(unique(edge[, 1]))) {
+  kids <- children[[as.character(parent)]]
+  tip_y[parent] <- mean(tip_y[kids])
+}
+node_x <- node.depth.edgelength(ordered)
+horiz <- data.frame(
+  x = node_x[edge[, 1]],
+  xend = node_x[edge[, 2]],
+  y = tip_y[edge[, 2]],
+  yend = tip_y[edge[, 2]]
+)
+vert <- bind_rows(lapply(names(children), function(parent) {
+  kids <- children[[parent]]
+  data.frame(
+    x = node_x[as.integer(parent)],
+    xend = node_x[as.integer(parent)],
+    y = min(tip_y[kids]),
+    yend = max(tip_y[kids])
+  )
+}))
+tip_lab <- data.frame(
+  x = node_x[seq_len(Ntip(ordered))],
+  y = tip_y[seq_len(Ntip(ordered))],
+  accession = ordered$tip.label
+)
+tip_lab$label <- target_names[match(tip_lab$accession, target_tips)]
+tip_lab$label[is.na(tip_lab$label)] <- ""
+tip_lab$color <- target_colors[match(tip_lab$label, target_names)]
+tip_lab$color[is.na(tip_lab$color)] <- "grey30"
+
+fig5A <- ggplot() +
+  geom_segment(data = horiz, aes(x = x, xend = xend, y = y, yend = yend)) +
+  geom_segment(data = vert, aes(x = x, xend = xend, y = y, yend = yend)) +
+  geom_text(data = tip_lab, aes(x = x, y = y, label = label, color = color),
+            hjust = 0, nudge_x = 0.01, size = 2.5, fontface = "italic", show.legend = FALSE) +
+  scale_color_identity() +
+  theme_void()
+
+ggsave("../../manuscript/figures/panels/fig5A_lachnospiraceae-tree.svg",
+       fig5A,
+       height = 7, width = 7)
 ```
 

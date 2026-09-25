@@ -1,3 +1,12 @@
+#' Distance of each rat sample to its diet centroid.
+#'
+#' Runs a Euclidean adonis2 test of diet, then returns the distance of each
+#' sample to the centroid of its group.
+#'
+#' @param seqtab Sample-by-taxon count matrix.
+#' @param meta Sample metadata with \code{sample} and \code{group}
+#'   (\code{brb} or \code{nmba}).
+#' @return Per-sample centroid distances and the adonis p-value.
 distanceCalc <- function(seqtab, meta){
   dist.in <- seqtab %>%
     as.data.frame() %>%

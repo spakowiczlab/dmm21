@@ -1,3 +1,12 @@
+#' Taxa that differ by diet in the rat feeding study.
+#'
+#' Counts are summed at phylum through genus and compared with a DESeq2
+#' model of \code{~ group}.
+#'
+#' @param seq Sample-by-ASV count matrix.
+#' @param tax ASV taxonomy with ranks from kingdom through genus.
+#' @param groups Sample metadata with \code{sample} and \code{group}.
+#' @return DESeq2 results for every rank, with a \code{TaxLev} column.
 difMicsRB <- function(seq,tax, groups){
   
   tax.tmp <- tax %>%

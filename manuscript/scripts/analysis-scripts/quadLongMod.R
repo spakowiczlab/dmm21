@@ -1,3 +1,12 @@
+#' Mixed models of tumor growth for each donor stool.
+#'
+#' Fits \code{tumor.volume ~ days + days^2 * treatment * gavage} with a
+#' random intercept for mouse, once per donor, and keeps the quadratic
+#' interaction terms.
+#'
+#' @param allexp Tumor measurements for every mimic experiment.
+#' @return A tidy table of those fixed effects, joined to the donor label
+#'   used on the heatmap.
 quadLongMod <- function(allexp){
 
   # Ok, process main chunks of data

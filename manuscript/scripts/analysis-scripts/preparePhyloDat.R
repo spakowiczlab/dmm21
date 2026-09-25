@@ -1,3 +1,14 @@
+#' Coordinates for the Lachnospiraceae tree of nectar-enriched species.
+#'
+#' Looks up an NCBI classification for every species in \code{metout} and
+#' marks Lachnospiraceae tips that passed \code{sigcut}.
+#'
+#' @param metout Long BE WELL abundance table with \code{Taxonomy} and
+#'   \code{TaxNum}.
+#' @param modres Tidy model table from \code{modelBW()}.
+#' @param sigcut P-value cutoff for calling a species enriched.
+#' @return A named list: \code{Segments} are the tree edges, and \code{Nodes}
+#'   are the enriched Lachnospiraceae tips.
 preparePhyloDat <- function(metout, modres, sigcut){
   
   # Get Lachno tax ids

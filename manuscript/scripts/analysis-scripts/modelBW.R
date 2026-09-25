@@ -1,3 +1,11 @@
+#' Mixed models of taxon abundance after black raspberry nectar.
+#'
+#' Each taxon at each rank is tested as
+#' \code{berry.group ~ taxon + (1|patient)}, where post-nectar visits are
+#' coded 1.
+#'
+#' @param relabun Long BE WELL relative-abundance table.
+#' @return Tidy fixed effects for every taxon that fit, sorted by p-value.
 modelBW <- function(relabun){
   capture.models.univ <- function(outcome, mics, modin){
     mods.list <- lapply(mics, function(x) 

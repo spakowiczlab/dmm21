@@ -1,3 +1,12 @@
+#' Distance of BE WELL samples to the responder-signature centroids.
+#'
+#' Joins \code{respondersig.response} from the calling environment and keeps
+#' the BE WELL rows.
+#'
+#' @param x Sample-by-taxon table with a \code{sample} column.
+#' @param meta Sample metadata with \code{sample} and \code{response}.
+#' @return Per-sample distance to each group centroid, with the adonis R2
+#'   and a pre/post visit label.
 respondersigDist <- function(x, meta){
   dist.in <- x %>%
     filter(sample %in% meta$sample) %>%

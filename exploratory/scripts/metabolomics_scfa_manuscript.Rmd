@@ -1,0 +1,58 @@
+---
+title: "Short-chain fatty acids shown with the Blautia metabolomics"
+output: html_document
+---
+
+Manuscript-facing copy of the short-chain fatty acid panel in `metabolomics.Rmd`. The original notebook is unchanged and still writes the individual indole and blood metabolite plots.
+
+In the submitted manuscript, butyrate, heptanoate, and valerate are Figure 5C. The ten-acid panel written by `metabolomics.Rmd` to `SCFA-plot.svg` is Supplementary Figure S1. Knit from `exploratory/scripts/`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+mimic_24_SCFA_Data_Summary <- read_excel(
+  "../data/metabolomics/mimic 24_SCFA_Data_Summary.xlsx",
+  sheet = "Normalization", n_max = 24
+)
+mimic_24_SCFA_Data_Summary[is.na(mimic_24_SCFA_Data_Summary)] <- 0
+
+normalized_cleaned_data <- mimic_24_SCFA_Data_Summary %>%
+  mutate(across(c(`acetic acid`, `propionic acid`, `isobutyric acid`, `butyric acid`,
+                  `2-methylbutyric acid`, `isovaleric acid`, `valeric acid`,
+                  `isocaproic acid`, `caproic acid`, `heptanoic acid`),
+                ~ . / `feces weight for SCFA (mg)`,
+                .names = "norm_{col}")) %>%
+  mutate(mouse = gsub("neg-m(\\d)c(\\d)", "\\1.\\2", Sample)) %>%
+  select(mouse, microbiome.sample, starts_with("norm_"))
+
+colnames(normalized_cleaned_data) <- gsub("^norm_", "", colnames(normalized_cleaned_data))
+
+long_data <- normalized_cleaned_data %>%
+  pivot_longer(cols = c(`butyric acid`, `valeric acid`, `heptanoic acid`),
+               names_to = "variable", values_to = "value") %>%
+  filter(microbiome.sample != "PBS") %>%
+  mutate(microbiome.sample = factor(
+           microbiome.sample,
+           levels = c("Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample,
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
+ggplot(long_data, aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +
+  facet_wrap(~variable, scales = "free_y", ncol = 5) +
+  labs(x = "", y = "Normalized SCFA") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        strip.text = element_text(size = 10),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Paired", direction = -1)
+
+ggsave("../../manuscript/figures/panels/fig5C_scfa-butyrate-heptanoate-valerate.svg", width = 5, height = 3)
+```

@@ -1,3 +1,10 @@
+#' Principal components of the rat 16S counts.
+#'
+#' @param seqtab Sample-by-taxon count matrix.
+#' @param meta Sample metadata with \code{sample} and \code{group}
+#'   (\code{brb} or \code{nmba}).
+#' @return A named list: \code{PCA} is the \code{prcomp} object, and
+#'   \code{GroupLabs} is \code{meta} with diet labels.
 seqToPCAplot <- function(seqtab, meta){
   pca.in <- seqtab %>%
     as.data.frame() %>%

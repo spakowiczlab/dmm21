@@ -1,3 +1,13 @@
+#' Phylum relative abundance for the BE WELL stacked-bar panel.
+#'
+#' Sample order and visit labels are taken from \code{bewell.tax} in the
+#' calling environment.
+#'
+#' @param exora Long relative-abundance table with \code{Taxonomy},
+#'   \code{RelAbun}, and \code{sample}.
+#' @param nphyl Number of phyla to keep before the remainder is labeled Other.
+#' @return Phylum abundance, one row per sample and phylum, with a
+#'   \code{timepoint} label.
 stackedBarBEWELL <- function(exora, nphyl){
   
   taxa <- exora %>% 

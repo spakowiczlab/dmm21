@@ -13,6 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(readxl)
+
+IHC_Spleen <- read_excel("../data/IHC_Spleen.xlsx")
+IHC_colon <- read_excel("../data/IHC_colon.xlsx")
 
 IHC_Spleen <- IHC_Spleen %>%
   mutate(
@@ -68,7 +72,7 @@ colon_mouse$Group <- factor(
   levels = c("IgG", "IgG+Blautia", "AntiPD1", "AntiPD1+Blautia")
 )
 
-ggplot(colon_mouse,
+fig4G <- ggplot(colon_mouse,
        aes(Group, Positive_mm2, fill = Group)) +
   geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.1, size = 3) +
@@ -77,8 +81,9 @@ ggplot(colon_mouse,
   ylab(expression(CD11c^"+"~cells/mm^2)) +
   xlab("Treatment")
 
-ggsave("../figures/IHC_colon.svg",
-       height = 6, width = 7)
+ggsave("../../manuscript/figures/panels/fig4G_cd11c-colon.svg",
+       fig4G,
+       height = 4, width = 5)
 
 ```
 ```{r}

@@ -1,0 +1,547 @@
+---
+title: "metabolomics"
+author: "Shiva Jahanbakhshi"
+date: "2024-08-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(broom)
+library(readxl)
+library(scales)
+```
+
+```{r}
+mimic_24_SCFA_Data_Summary <- read_excel("../../exploratory/data/metabolomics/mimic 24_SCFA_Data_Summary.xlsx",
+                                         sheet = "Normalization",n_max = 24 )
+mimic24_feces_combined <- read_excel("../../exploratory/data/metabolomics/mimic24_feces_combined.xlsx",
+                                         sheet = "Full")
+mimic24_blood_combined <- read_excel("../../exploratory/data/metabolomics/mimic24_blood_combined.xlsx",
+                                         sheet = "Full")
+```
+# mimic24 SCFA
+```{r}
+mimic_24_SCFA_Data_Summary[is.na(mimic_24_SCFA_Data_Summary)] <- 0
+
+normalized_SCFA <- mimic_24_SCFA_Data_Summary %>%
+  mutate(across(c(`acetic acid`, `propionic acid`, `isobutyric acid`, `butyric acid`,
+                  `2-methylbutyric acid`, `isovaleric acid`, `valeric acid`, 
+                  `isocaproic acid`, `caproic acid`, `heptanoic acid`), 
+                ~ . / `feces weight for SCFA (mg)`, 
+                .names = "norm_{col}"))
+```
+
+
+```{r}
+normalized_cleaned_data <- normalized_SCFA %>%
+  mutate(mouse = gsub("neg-m(\\d)c(\\d)", "\\1.\\2", Sample)) %>%
+  select(mouse, microbiome.sample, starts_with("norm_"))
+
+colnames(normalized_cleaned_data) <- gsub("^norm_", "", colnames(normalized_cleaned_data))
+
+
+```
+
+
+```{r}
+long_data <- normalized_cleaned_data %>%
+  pivot_longer(cols = c(`acetic acid`, `butyric acid`, `caproic acid`, 
+                        `isobutyric acid`, `isocaproic acid`, 
+                        `isovaleric acid`, `propionic acid`, 
+                        `valeric acid`, `heptanoic acid`, `2-methylbutyric acid`),
+               names_to = "variable", values_to = "value")
+long_no_pbs <- 
+  long_data %>% 
+  filter(microbiome.sample != "PBS")
+
+long_no_pbs %>% 
+ggplot(aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +  
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  facet_wrap(~ variable, scales = "free_y", ncol = 5) +
+  labs(x = "", 
+       y = "Normalized SCFA") +
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 55, hjust = 1)) +  
+  scale_fill_brewer(palette = "Paired", direction = -1)
+
+ggsave("../../exploratory/figures/SCFA-plot.png", width = 10, height = 8)
+ggsave("../../exploratory/figures/SCFA-plot.svg", width = 8, height = 5)
+ggsave("../figures/panels/supplementary/s1_scfa-all.svg", width = 8, height = 5)
+
+
+```
+```{r}
+long_data <- normalized_cleaned_data %>%
+  pivot_longer(cols = c(`butyric acid`, `valeric acid`, `heptanoic acid`),
+               names_to = "variable", values_to = "value") %>%
+  filter(microbiome.sample != "PBS") %>%  # Filter out PBS
+  mutate(microbiome.sample = factor(microbiome.sample, 
+                                    levels = c("Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample, 
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
+ggplot(long_data, aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +  
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  facet_wrap(~ variable, scales = "free_y", ncol = 5) +
+  labs(x = "", 
+       y = "Normalized SCFA") +
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  scale_fill_brewer(palette = "Paired", direction = -1)
+
+ggsave("../../exploratory/figures/SCFA-plot.fig4.svg", width = 5, height = 3)
+ggsave("../figures/panels/fig5C_scfa-butyrate-heptanoate-valerate.svg", width = 5, height = 3)
+
+```
+
+```{r}
+scfas <- c("acetic.acid", "butyric.acid", "caproic.acid", 
+           "isobutyric.acid", "isocaproic.acid", 
+           "isovaleric.acid", "propionic.acid", 
+           "valeric.acid", "heptanoic.acid", "X2.methylbutyric.acid")
+
+model_df <- normalized_cleaned_data %>%
+  mutate(Blautia=if_else(grepl("Blautia", microbiome.sample),true= 1, false= 0)) %>% 
+    filter(microbiome.sample != "PBS")
+
+
+lm0 <- glm(Blautia ~ `acetic acid`, data = model_df, family="binomial") 
+summary(lm0)
+
+names(model_df) <- make.names(names(model_df))
+
+for (n in scfas) {
+  f <- as.formula(paste0("Blautia ~ ", n))
+  lm0 <- glm(f, data = model_df, family = "binomial")
+  p_value <- tidy(lm0)$p.value[2]
+  print(paste(n, "p-value:", p_value))
+}
+
+```
+
+```{r}
+results_df <- data.frame(SCFA = character(), estimate = numeric(), p_value = numeric(), stringsAsFactors = FALSE)
+
+for (n in scfas) {
+  f <- as.formula(paste0("Blautia ~ ", n))
+    lm0 <- glm(f, data = model_df, family = "binomial")
+    estimate <- tidy(lm0)$estimate[2]
+    p_value <- tidy(lm0)$p.value[2]
+    results_df <- rbind(results_df, data.frame(SCFA = n, estimate = estimate, p_value = p_value))
+}
+
+print(results_df)
+
+
+```
+
+```{r}
+results_df <- results_df %>%
+  mutate(padj = p.adjust(p_value, method = "fdr"),
+         neg_log_padj = -log10(padj))
+
+ggplot(results_df, aes(x = estimate, y = neg_log_padj)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Estimate", y = "-log10(Adjusted p-value)") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-20000, 140000)) +  
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+# Select molecules with the largest effect size (absolute) and smallest p-value
+selected_molecules <- results_df %>%
+  arrange(p_value, desc(abs(estimate))) %>% # Sort by smallest p-value and largest effect size
+  slice(1:2)  # Select the top two molecules
+
+selected_molecule_1 <- selected_molecules$SCFA[1]
+selected_molecule_2 <- selected_molecules$SCFA[2]
+
+ggplot(model_df, aes(x = microbiome.sample, y = .data[[selected_molecule_1]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_1) +
+  theme(legend.position = "none")
+
+ggplot(model_df, aes(x = microbiome.sample, y = .data[[selected_molecule_2]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Dark2") +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_2) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+mimic24_feces_combined_C <- mimic24_feces_combined %>%
+  select(Name, starts_with("Group Area: pos-m"))
+
+df_transposed <- mimic24_feces_combined_C %>%
+  column_to_rownames(var = "Name") %>%
+  t() %>% 
+  as.data.frame() %>%
+  rownames_to_column(var = "Name")
+
+df_transposed <- df_transposed %>%
+  mutate(`stool pellet` = gsub("Group Area: pos-", "", Name))
+
+
+merged_data2 <- df_transposed %>%
+  left_join(mimic_24_SCFA_Data_Summary %>% select(Treatment, microbiome.sample, `feces weight for SCFA (mg)`, `stool pellet`), 
+            by = "stool pellet")
+
+normalized_data_feces <- merged_data2 %>%
+  mutate(across(where(is.numeric), 
+                ~ . / `feces weight for SCFA (mg)`, 
+                .names = "norm_{col}"))
+
+
+ normalized <- normalized_data_feces %>%
+  select(`stool pellet`, microbiome.sample, starts_with("norm_"))
+
+colnames(normalized) <- gsub("^norm_", "", colnames(normalized))
+
+long_data1 <- normalized %>%
+  pivot_longer(cols = (where(is.numeric)),
+               names_to = "variable", values_to = "value")
+
+ggplot(long_data1, aes(x = microbiome.sample, y = log(value), fill = microbiome.sample)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +  
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  facet_wrap(~ variable, scales = "free_y") +
+  labs(title = "Boxplots of Normalized metabolomics molecules Across Microbiome Samples", 
+       x = "Microbiome Sample", 
+       y = "Normalized molecules") +
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  scale_fill_brewer(palette = "Set3") 
+
+
+
+```
+
+
+```{r}
+model_df1 <- normalized %>%
+  mutate(Blautia = if_else(grepl("Blautia", microbiome.sample), true = 1, false = 0))
+
+m <- setdiff(colnames(model_df1 %>% select(where(is.numeric))), "Blautia")
+
+results_df1 <- data.frame(molecules = character(), estimate = numeric(), p_value = numeric(), stringsAsFactors = FALSE)
+
+for (n in m) {
+  f1 <- as.formula(paste0("Blautia ~ `", n, "`"))
+  
+  lm01 <- glm(f1, data = model_df1, family = "binomial")
+  
+  tidy_lm <- tidy(lm01)
+  
+  if(length(tidy_lm$p.value) > 1) {
+    estimate <- tidy_lm$estimate[2]
+    p_value <- tidy_lm$p.value[2]
+    results_df1 <- rbind(results_df1, data.frame(molecules = n, estimate = estimate, p_value = p_value))
+  } else {
+    results_df1 <- rbind(results_df1, data.frame(molecules = n, estimate = NA, p_value = NA))
+  }
+}
+
+significant_results <- results_df1 %>%
+  filter(p_value < 0.05)
+
+print(significant_results)
+
+```
+
+```{r}
+results_df1 <- results_df1 %>%
+  mutate(padj = p.adjust(p_value, method = "fdr"),
+         neg_log_padj = -log10(padj))
+
+ggplot(results_df1, aes(x = estimate, y = neg_log_padj)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Estimate", y = "-log10(Adjusted p-value)") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-0.0001, 0.0001)) +  
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+```
+
+```{r}
+model_df1 <- model_df1 %>%
+  mutate(microbiome.sample = factor(microbiome.sample, 
+                                    levels = c("PBS", "Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample, 
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
+selected_molecules1 <- results_df1 %>%
+  arrange(p_value, desc(abs(estimate))) %>%  
+  slice(1:2)
+
+selected_molecule_3 <- selected_molecules1$molecules[1]
+selected_molecule_4 <- selected_molecules1$molecules[2]
+
+ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_3]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  theme_minimal() +
+  scale_fill_brewer(palette = "Paired", direction = -1) +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_3) +
+  theme(legend.position = "none")
+
+ggplot(model_df1, aes(x = microbiome.sample, y = .data[[selected_molecule_4]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  theme_minimal() +
+  scale_fill_brewer(palette = "Paired", direction = -1) +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_4) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+scientific_no_plus <- function(x) {
+  ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
+}
+
+selected_molecules_feces <- list("DL-Tryptophan", "N-Acetyl-DL-tryptophan", "Inosine", "Deoxyinosine", "trans-3-Indoleacrylic acid", "Dihydroxyindole", "Indole-2-carboxylic acid", "5-Hydroxyindole-3-acetic acid", "5-Methoxy-3-indoleaceate", "Ethyl 3-Indoleacetate")
+
+plot_molecule <- function(molecule) {
+  ggplot(model_df1 %>% filter(microbiome.sample != "PBS"), aes(x = microbiome.sample, y = .data[[molecule]], fill = microbiome.sample)) +
+    geom_boxplot() +
+    geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+    theme_minimal() +
+    scale_fill_brewer(palette = "Paired", direction = -1) +  
+    labs(x = "", 
+         y = molecule) +
+    scale_y_continuous(labels = scientific_no_plus) + 
+    theme(legend.position = "none")
+}
+
+for (molecule in selected_molecules_feces) {
+  print(plot_molecule(molecule))
+}
+
+supp_feces <- c(
+  "5-Hydroxyindole-3-acetic acid" = "s2A_5-hydroxyindole-3-acetic-acid.svg",
+  "5-Methoxy-3-indoleaceate" = "s2B_5-methoxy-3-indoleacetate.svg",
+  "Dihydroxyindole" = "s2C_dihydroxyindole.svg",
+  "Ethyl 3-Indoleacetate" = "s2D_ethyl-3-indoleacetate.svg",
+  "Indole-2-carboxylic acid" = "s2E_indole-2-carboxylic-acid.svg",
+  "trans-3-Indoleacrylic acid" = "s2F_trans-3-indoleacrylic-acid.svg"
+)
+
+for (molecule in selected_molecules_feces) {
+  p <- plot_molecule(molecule)
+  ggsave(paste0("../../exploratory/figures/", gsub(" ", "_", molecule), "_feces.svg"), plot = p, height = 3, width = 5)
+  if (molecule %in% names(supp_feces)) {
+    ggsave(file.path("../figures/panels/supplementary", supp_feces[[molecule]]), plot = p, height = 3, width = 5)
+  }
+}
+
+```
+
+```{r}
+mimic24_blood_combined_C <- mimic24_blood_combined %>%
+  select(Name, starts_with("Group Area: pos-m"))
+
+df_transposed1 <- mimic24_blood_combined_C %>%
+  column_to_rownames(var = "Name") %>%
+  t() %>% 
+  as.data.frame() %>%
+  rownames_to_column(var = "Name")
+
+df_transposed1 <- df_transposed1 %>%
+  mutate(`stool pellet` = gsub("Group Area: pos-", "", Name))
+
+
+merged_data2 <- df_transposed1 %>%
+  left_join(mimic_24_SCFA_Data_Summary %>% select(microbiome.sample, `stool pellet`), 
+            by = "stool pellet")
+
+```
+
+
+```{r}
+model_df2 <- merged_data2 %>%
+  mutate(Blautia = if_else(grepl("Blautia", microbiome.sample), true = 1, false = 0))
+
+m_b <- setdiff(colnames(model_df2 %>% select(where(is.numeric))), "Blautia")
+
+results_df2 <- data.frame(molecules = character(), estimate = numeric(), p_value = numeric(), stringsAsFactors = FALSE)
+
+for (n in m_b) {
+  f2 <- as.formula(paste0("Blautia ~ `", n, "`"))
+  
+  lm02 <- glm(f2, data = model_df2, family = "binomial")
+  
+  tidy_lm <- tidy(lm02)
+  
+  if(length(tidy_lm$p.value) > 1) {
+    estimate <- tidy_lm$estimate[2]
+    p_value <- tidy_lm$p.value[2]
+    results_df2 <- rbind(results_df2, data.frame(molecules = n, estimate = estimate, p_value = p_value))
+  } else {
+    results_df2 <- rbind(results_df2, data.frame(molecules = n, estimate = NA, p_value = NA))
+  }
+}
+
+significant_results2 <- results_df2 %>%
+  filter(p_value < 0.05)
+
+print(significant_results2)
+
+```
+
+```{r}
+results_df2 <- results_df2 %>%
+  mutate(padj = p.adjust(p_value, method = "fdr"),
+         neg_log_padj = -log10(padj))
+
+ggplot(results_df2, aes(x = estimate, y = neg_log_padj)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Estimate", y = "-log10(Adjusted p-value)") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red") +
+  coord_cartesian(ylim = c(0, 1.5), xlim = c(-0.00001, 0.00001)) +  
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+selected_molecules2 <- results_df2 %>%
+  arrange(p_value, desc(abs(estimate))) %>% 
+  slice(1:2)  
+
+selected_molecule_5 <- selected_molecules2$molecules[1]
+selected_molecule_6 <- selected_molecules2$molecules[2]
+
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_5) +
+  theme(legend.position = "none")
+
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_6) +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+scientific_no_plus <- function(x) {
+  ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
+}
+
+plot_molecule <- function(molecule) {
+  ggplot(model_df2 %>% filter(microbiome.sample != "PBS"), aes(x = microbiome.sample, y = .data[[molecule]], fill = microbiome.sample)) +
+    geom_boxplot() +
+    geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+    theme_minimal() +
+    scale_fill_brewer(palette = "Paired", direction = -1) +  
+    labs(x = "", 
+         y = molecule) +
+    scale_y_continuous(labels = scientific_no_plus) + 
+    theme(legend.position = "none")
+}
+
+selected_molecules_blood <- list("DL-Tryptophan", "L-Tryptophan", "Inosine", "trans-3-Indoleacrylic acid", "Dihydroxyindole")
+
+for (molecule in selected_molecules_blood) {
+  print(plot_molecule(molecule))
+}
+
+supp_blood <- c(
+  "Dihydroxyindole" = "s3A_blood-dihydroxyindole.svg",
+  "trans-3-Indoleacrylic acid" = "s3B_blood-trans-3-indoleacrylic-acid.svg"
+)
+
+for (molecule in selected_molecules_blood) {
+  p <- plot_molecule(molecule)
+  ggsave(paste0("../../exploratory/figures/Blood-", gsub(" ", "-", molecule), ".svg"), plot = p, height = 3, width = 5)
+  if (molecule %in% names(supp_blood)) {
+    ggsave(file.path("../figures/panels/supplementary", supp_blood[[molecule]]), plot = p, height = 3, width = 5)
+  }
+}
+```
+
+```{r}
+model_df2 <- model_df2 %>%
+  filter(microbiome.sample != "PBS") %>%  # Filter out PBS
+  mutate(microbiome.sample = factor(microbiome.sample, 
+                                    levels = c("Agathobacter rectalis", "Blautia obeum", "Blautia massiliensis")),
+         microbiome.sample = recode(microbiome.sample, 
+                                    "Agathobacter rectalis" = "A. rectalis",
+                                    "Blautia obeum" = "B. obeum",
+                                    "Blautia massiliensis" = "B. massiliensis"))
+
+selected_molecules2 <- results_df2 %>%
+  arrange(p_value, desc(abs(estimate))) %>% 
+  slice(1:2)  
+
+selected_molecule_5 <- selected_molecules2$molecules[1]
+selected_molecule_6 <- selected_molecules2$molecules[2]
+
+# Custom scientific notation function
+scientific_no_plus <- function(x) {
+  ifelse(x == 0, "0", parse(text = gsub("e\\+?", " %*% 10^", scientific_format()(x))))
+}
+
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_5]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, size = 1, alpha = 0.8, color = "black") +  
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 20, hjust = 1)) +
+  scale_fill_brewer(palette = "Paired", direction = -1) +  
+  labs(x = "", 
+       y = selected_molecule_5) +
+  scale_y_continuous(labels = scientific_no_plus) + 
+  theme(legend.position = "none")
+ggsave("../../exploratory/figures/Fig4C.svg",
+       height = 3, width = 5)
+ggsave("../figures/panels/fig5D_l-carnitine.svg",
+       height = 3, width = 5)
+
+ggplot(model_df2, aes(x = microbiome.sample, y = .data[[selected_molecule_6]], fill = microbiome.sample)) +
+  geom_boxplot() +
+  theme_minimal() +
+  theme(legend.position = "none",  
+        strip.text = element_text(size = 10),  
+        axis.text.x = element_text(angle = 55, hjust = 1)) +
+  scale_fill_brewer(palette = "Paired", direction = -1) +  
+  labs(x = "Microbiome Sample", 
+       y = selected_molecule_6) +
+  theme(legend.position = "none")
+
+
+
+```

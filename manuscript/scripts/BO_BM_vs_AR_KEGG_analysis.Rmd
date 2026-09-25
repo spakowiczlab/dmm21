@@ -1,0 +1,169 @@
+---
+title: "KEGG ortholog"
+author: "Shiva Jahanbakhshi"
+date: "2025-11-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(UpSetR)
+library(KEGGREST)
+library(clusterProfiler)
+library(enrichplot)
+```
+
+```{r}
+# load KO tables
+ar <- read.table("../../exploratory/data/A_rectalis_KOs.txt",
+                 sep = "\t", header = FALSE, stringsAsFactors = FALSE)[,1] |> unique()
+bm <- read.table("../../exploratory/data/B_massiliensis_KOs.txt",
+                 sep = "\t", header = FALSE, stringsAsFactors = FALSE)[,1] |> unique()
+bo <- read.table("../../exploratory/data/B_obeum_KOs.txt",
+                 sep = "\t", header = FALSE, stringsAsFactors = FALSE)[,1] |> unique()
+
+
+# checks
+length(ar); length(bm); length(bo)
+head(ar)
+
+
+```
+
+```{r}
+#UpSet plot
+pdf("../figures/panels/fig5E_shared-ko-upset.pdf", width=7, height=5)
+
+upset(
+  fromList(list(
+    `B. obeum` = bo,
+    `B. massiliensis` = bm,
+    `A. rectalis` = ar
+  )),
+  nsets = 3,
+  sets = c("B. obeum","B. massiliensis","A. rectalis"),
+  order.by = "freq",
+  mainbar.y.label = "Shared KO count",
+  sets.x.label = "Total KO per species"
+)
+
+dev.off()
+```
+
+```{r}
+shared_BO_BM_not_AR <- intersect(bo, bm) |> setdiff(ar)
+length(shared_BO_BM_not_AR)
+
+write.table(shared_BO_BM_not_AR, "shared_BO_BM_not_AR.txt",
+            quote = FALSE, row.names = FALSE, col.names = FALSE)
+```
+
+```{r}
+BO_BM_not_AR_annot <- read.table(
+  "../../exploratory/data/BO_BM_not_AR_annot.tsv",
+  sep = "\t",
+  header = FALSE,
+  quote = "",
+  stringsAsFactors = FALSE
+)
+
+
+colnames(BO_BM_not_AR_annot) <- c("KO", "Function")
+head(BO_BM_not_AR_annot)
+
+```
+
+```{r}
+# define a background universe = all KOs seen in any of the 3 genomes
+background <- unique(c(bo, bm, ar))
+length(background)
+
+```
+```{r}
+# map KOs -> KEGG pathways using KEGGREST
+# map BOTH the shared set and the background so enrichment has a proper universe.
+
+# KEGG link table: KO -> pathway (named vector)
+# KEGG link table
+ko2path_all <- keggLink("pathway", "ko")
+
+map_ko_to_tbl <- function(ko_vec, ko2path) {
+  wanted <- ko2path[paste0("ko:", ko_vec)]
+  wanted <- wanted[!is.na(wanted)]
+  tibble(
+    KO      = sub("^ko:",  "", names(wanted)),
+    Pathway = sub("^path:","", unname(wanted))
+  ) %>% distinct() %>% tidyr::drop_na(Pathway)
+}
+
+# tables
+tbl_shared <- map_ko_to_tbl(shared_BO_BM_not_AR,     ko2path_all)
+tbl_bg     <- map_ko_to_tbl(background, ko2path_all)
+
+# add human-readable pathway names
+path_names <- keggList("pathway")
+path_name_tbl <- tibble(
+  Pathway      = sub("^path:", "", names(path_names)),
+  Pathway_Name = as.character(path_names)
+)
+
+tbl_shared <- tbl_shared %>% left_join(path_name_tbl, by = "Pathway")
+tbl_bg     <- tbl_bg     %>% left_join(path_name_tbl, by = "Pathway")
+
+# background mapping for enrichment
+ko_path_tbl <- tbl_bg %>%
+  select(KO, Pathway, Pathway_Name) %>%
+  distinct()
+
+# summary for bar plot
+pathway_summary <- tbl_shared %>% count(Pathway_Name, sort = TRUE)
+
+write.csv(tbl_shared,       "BO_BM_not_AR_KO_to_pathways.csv",    row.names = FALSE)
+write.csv(pathway_summary,  "BO_BM_not_AR_pathway_summary.csv",   row.names = FALSE)
+
+```
+
+```{r}
+pathway_summary %>%
+  filter(!is.na(Pathway_Name)) %>%
+  slice_max(n, n = 20) %>%
+  ggplot(aes(x = reorder(Pathway_Name, n), y = n, fill = Pathway_Name)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    x = "KEGG Pathway",
+    y = "Shared KO Count"
+  ) +
+  scale_fill_discrete() +
+  theme_minimal(base_size = 12)
+```
+
+```{r}
+# enrichment
+query <- shared_BO_BM_not_AR
+background <- unique(c(bo, bm, ar))
+
+TERM2GENE <- ko_path_tbl %>% select(Pathway, KO)
+TERM2NAME <- ko_path_tbl %>% select(Pathway, Pathway_Name) %>% distinct()
+
+ekegg <- enricher(query,
+                  TERM2GENE = TERM2GENE,
+                  TERM2NAME = TERM2NAME,
+                  universe  = background,
+                  pAdjustMethod = "BH")
+
+ekegg_res <- as.data.frame(ekegg)
+sum(ekegg_res$p.adjust < 0.05)
+
+dotplot(ekegg, showCategory = 20,
+        title = "Enriched KEGG pathways (BO ∩ BM \\ AR)")
+ggsave("../figures/panels/fig5F_kegg-enrichment.svg", width = 6, height = 4)
+
+
+```
+
+

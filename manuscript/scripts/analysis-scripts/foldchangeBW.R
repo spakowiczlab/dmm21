@@ -1,3 +1,10 @@
+#' Log fold change in taxon abundance after black raspberry nectar.
+#'
+#' Post-nectar (\code{tB}) visits are the treatment and the other visits are
+#' the control. Calculated from kingdom through genus.
+#'
+#' @param mics Long BE WELL relative-abundance table.
+#' @return One row per taxon, with \code{term} and \code{l2fc}.
 foldchangeBW <- function(mics){
   prepareFoldChangeLev <- function(lev.in, lev.out){
     

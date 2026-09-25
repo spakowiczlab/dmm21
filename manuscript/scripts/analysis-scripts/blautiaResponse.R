@@ -1,3 +1,9 @@
+#' Fraction of mice that were tumor-free after participant-85 stool.
+#'
+#' @param allexp Tumor measurements for every mimic experiment.
+#' @return One row per microbiome sample and treatment in the 85v1
+#'   experiments. \code{frac.0} is the share of mice whose final tumor
+#'   volume was zero.
 blautiaResponse <- function(allexp){
   # Calculating complete response in each experiment
   tmp <- allexp %>%

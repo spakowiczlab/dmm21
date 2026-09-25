@@ -1,0 +1,142 @@
+---
+title: "Figure 4 manuscript panels (Blautia supplementation)"
+output: html_document
+---
+
+Manuscript-facing copy of submitted Figure 4A–C. The exploratory notebooks `Fig3E-F_mim18-19_volume-analyses.Rmd` and `mimic_gavaged-sample_barplots.Rmd` are unchanged.
+
+Knit from `manuscript/scripts/`. Outputs go to `manuscript/figures/panels/`.
+
+Figure 4D–F are histology images and are not drawn by these notebooks. Figure 4G, colon CD11c counts, is `IHC_mimic18.Rmd`. The three-strain tumor curves, carnitine, KEGG overlap, and the Lachnospiraceae tree are Figure 5.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(RColorBrewer)
+```
+
+```{r}
+processed.data <- read.csv("../../exploratory/data/2023-12-01_tumor-size_R-formatted.csv") %>%
+  mutate(gavage = if_else(grepl("v1|v3", microbiome.sample),
+                          "Pre-BRB",
+                          if_else(grepl("v2|v4", microbiome.sample), "Post-BRB", "other")),
+         gavage = fct_relevel(gavage, "Pre-BRB"),
+         treatment = fct_relevel(treatment, "IgG"))
+
+mim18.19 <- processed.data %>%
+  filter(experiment %in% c("mimic18", "mimic19")) %>%
+  mutate(supplement = if_else(grepl("Blautia", microbiome.sample), "Blautia", "Normal"),
+         supplement = fct_relevel(supplement, "Normal"),
+         microbiome.sample = ifelse(grepl("Blautia", microbiome.sample),
+                                    "85v1 + Blautia", "85v1"))
+```
+
+```{r fig4A}
+spec <- read.csv("../../exploratory/data/BEWELL/RelAbun_spec.csv", row.names = 1)
+microbesofinterest <- c("s__Roseburia_sp_CAG_309",
+                        "s__Lactobacillus_animalis",
+                        "s__Blautia_obeum",
+                        "s__Lachnospira_pectinoschiza",
+                        "s__Parabacteroides_goldsteinii")
+
+spec %>%
+  rownames_to_column("id") %>%
+  separate(id, into = c("ptid", "study_visit")) %>%
+  gather(-ptid, -study_visit, key = "microbe", value = "relAbun") %>%
+  mutate(study_visit = fct_relevel(study_visit, c("rP", "tP", "rB", "tB")),
+         relAbun = as.numeric(relAbun),
+         ptid = as.character(ptid)) %>%
+  filter(ptid == "85", microbe %in% microbesofinterest, study_visit %in% c("rB", "tB")) %>%
+  mutate(microbe = str_replace_all(microbe, c("^s__" = "", "_" = " "))) %>%
+  ggplot(aes(x = study_visit, y = relAbun, fill = microbe)) +
+  geom_bar(stat = "identity") +
+  scale_fill_viridis_d(option = "cividis") +
+  theme_bw() +
+  labs(x = "Sample", y = "Relative Abundance of Lachnospiraceae") +
+  facet_wrap(~ptid, nrow = 1)
+
+ggsave("../figures/panels/fig4A_participant85-lachnospiraceae.svg",
+       height = 3, width = 5)
+```
+
+```{r fig4B-tumor-volume}
+mean.vol <- mim18.19 %>%
+  mutate(treatment.group = paste(treatment, microbiome.sample, sep = " x ")) %>%
+  group_by(treatment.group, days.from.injection) %>%
+  summarize(mean = mean(tumor.volume), sd = sd(tumor.volume), .groups = "drop") %>%
+  mutate(lwr = pmax(mean - sd, 0),
+         upr = mean + sd,
+         Supplement = if_else(grepl("Blautia", treatment.group), "Blautia", "Normal"),
+         Treatment = if_else(grepl("Anti", treatment.group), "Anti-PD1", "IgG"),
+         Supplement = fct_relevel(Supplement, "Blautia"))
+
+mean.vol %>%
+  ggplot(aes(x = days.from.injection, y = mean)) +
+  geom_line(aes(group = treatment.group, color = Supplement, linetype = Treatment), lwd = 1) +
+  geom_smooth(aes(color = Supplement, lty = Treatment), size = 0) +
+  geom_point(aes(color = Supplement)) +
+  labs(x = "Days from Tumor Injection",
+       y = expression("Mean Tumor volume ("~mm^3~")")) +
+  theme_bw() +
+  scale_color_brewer(palette = "Set1")
+
+ggsave("../figures/panels/fig4B_blautia-tumor-volume.svg",
+       height = 3, width = 4)
+```
+
+```{r fig4C-tumor-free}
+# The exploratory notebook refers to box.1819, which is the mimic 18/19 table built above.
+mim18.19 %>%
+  group_by(microbiome.sample, treatment) %>%
+  summarize(frac.0 = mean(tumor.volume <= 0), .groups = "drop") %>%
+  ggplot(aes(x = treatment, y = frac.0, fill = microbiome.sample)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  theme_bw(base_size = 9) +
+  ylim(0, 1) +
+  labs(x = "Treatment", y = "% Tumor Free", fill = "Sample") +
+  scale_fill_brewer(palette = "Set1")
+
+ggsave("../figures/panels/fig4C_blautia-tumor-free.svg",
+       height = 2, width = 4)
+```
+
+```{r fig5B-three-strain-tumor-volume}
+library(readxl)
+
+mimic24 <- read_xlsx("../../exploratory/data/mimic24_tumor-size.xlsx") %>%
+  drop_na(microbiome.sample) %>%
+  filter(microbiome.sample != "PBS") %>%
+  mutate(tumor.volume = as.numeric(`tumor.length.(mm)`) * (as.numeric(`tumor.width.(mm)`)^2) / 2,
+         days.from.injection = as.numeric(as.Date(date) - as.Date("2024-03-14")),
+         Sample = recode(microbiome.sample,
+                         "Agathobacter rectalis" = "A. rectalis",
+                         "Blautia obeum" = "B. obeum",
+                         "Blautia massiliensis" = "B. massiliensis")) %>%
+  filter(days.from.injection >= 0)
+
+fig5B <- mimic24 %>%
+  group_by(Sample, days.from.injection) %>%
+  summarize(mean = mean(tumor.volume, na.rm = TRUE),
+            sd = sd(tumor.volume, na.rm = TRUE),
+            .groups = "drop") %>%
+  mutate(Sample = factor(Sample, levels = c("A. rectalis", "B. obeum", "B. massiliensis"))) %>%
+  ggplot(aes(days.from.injection, mean, color = Sample, fill = Sample)) +
+  geom_ribbon(aes(ymin = pmax(mean - sd, 0), ymax = mean + sd), alpha = 0.25, color = NA) +
+  geom_line(linewidth = 1) +
+  geom_point() +
+  scale_color_manual(values = c("A. rectalis" = "#8FCB8F",
+                                 "B. obeum" = "#3B6FB6",
+                                 "B. massiliensis" = "#A6CEE3")) +
+  scale_fill_manual(values = c("A. rectalis" = "#8FCB8F",
+                                "B. obeum" = "#3B6FB6",
+                                "B. massiliensis" = "#A6CEE3")) +
+  labs(x = "Days from Tumor Injection",
+       y = expression("Mean Tumor Volume ("~mm^3~")"),
+       color = "Sample",
+       fill = "Sample") +
+  theme_bw()
+
+ggsave("../figures/panels/fig5B_three-strain-tumor-volume.svg",
+       fig5B,
+       height = 4, width = 5)
+```

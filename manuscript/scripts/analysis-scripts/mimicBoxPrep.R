@@ -1,4 +1,13 @@
 
+#' Endpoint tumor volumes for the mimic boxplots.
+#'
+#' Keeps each mouse's last measurement after day 10 and labels the BE WELL
+#' donor experiments.
+#'
+#' @param allexp Tumor measurements for every mimic experiment.
+#' @return A named list: \code{bewell.filt} is the donor-labeled endpoint
+#'   table, and \code{labelled.patients} carries the short donor labels used
+#'   on the plot.
 mimicBoxPrep <- function(allexp){
   processed.data <- allexp %>%
     mutate(treatment = fct_relevel(treatment, "IgG")) %>%

@@ -1,3 +1,11 @@
+#' Tumor volume after participant-85 stool with or without B. obeum.
+#'
+#' Fits a linear mixed model of mimic 18 and 19 and returns both the
+#' summary curve and the fixed-effect table.
+#'
+#' @param allexp Tumor measurements for every mimic experiment.
+#' @return A named list: \code{plotdat} is the mean-plus-or-minus-sd curve,
+#'   and \code{modelres} is the tidy fixed effects with confidence intervals.
 tumorVolTimeBlau <- function(allexp){
   tmp <- allexp %>%
     filter(experiment == "mimic18" | experiment == "mimic19") %>% 
