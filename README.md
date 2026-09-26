@@ -2,20 +2,20 @@
 <tr>
 <td>
 
-# dmm21
+# bewell-mice
 
 Black raspberry nectar, the gut microbiome, and immune checkpoint response
 
 </td>
 <td align="right" width="220">
 
-<img src="dmm21-hex.png" width="200" alt="dmm21 hex sticker">
+<img src="dmm21-hex.svg" width="200" alt="bewell-mice hex sticker">
 
 </td>
 </tr>
 </table>
 
-This repository contains the code and figure panels for the mouse-model paper that accompanies the BE WELL clinical trial. BE WELL tested whether four weeks of black raspberry nectar changes the gut microbiome of people at high risk for lung cancer ([NCT04267874](https://clinicaltrials.gov/study/NCT04267874)). This paper asks whether those microbiome changes, and one enriched species (*Blautia obeum*), are enough to improve anti-PD-1 response after the stool is transferred into tumor-bearing mice.
+This repository contains the code and figure panels for the mouse-model paper that accompanies the BE WELL clinical trial. BE WELL tested whether four weeks of black raspberry nectar changes the gut microbiome of people at high risk for lung cancer ([NCT04267874](https://clinicaltrials.gov/study/NCT04267874)). This paper asks whether those microbiome changes, and one of the enriched species (*Blautia obeum*), are sufficient to improve anti-PD-1 response after the stool is transferred into tumor-bearing mice.
 
 The trial itself is a separate public repository: [spakowiczlab/bewell](https://github.com/spakowiczlab/bewell). Enrollment, the nectar, urine polyphenols, cytokines, and the trial microbiome figures are documented there. This repository starts where that one stops: the rat feeding study, the comparison of BE WELL stool to published immunotherapy-response signatures, the mouse fecal-transfer experiments, and the Blautia and metabolomics follow-up.
 

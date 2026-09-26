@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="title desc">
+  <title id="title">bewell-mice</title>
+  <desc id="desc">Hex sticker with blackberries, a person, and a mouse.</desc>
+
+  <!-- Pointed hex. Move these two polygons together if you resize the sticker. -->
+  <polygon id="border" fill="#F8E8D0" points="300.00,24.00 539.02,162.00 539.02,438.00 300.00,576.00 60.98,438.00 60.98,162.00"/>
+  <polygon id="background" fill="#351B4A" points="300.00,44.78 521.02,172.39 521.02,427.61 300.00,555.22 78.98,427.61 78.98,172.39"/>
+
+  <g id="berries">
+    <path id="leaf-left" fill="#2C6236" d="M166 242c-6-22-28-24-30-8 4 10 18 14 30 8z"/>
+    <path id="leaf-right" fill="#3A7A42" d="M182 238c20-16 36-4 28 10-8 6-22 6-28-10z"/>
+    <g id="berry-top" fill="#1A0E16">
+      <circle cx="162" cy="238" r="11"/>
+      <circle cx="174" cy="231" r="11"/>
+      <circle cx="186" cy="238" r="11"/>
+      <circle cx="186" cy="252" r="11"/>
+      <circle cx="174" cy="259" r="11"/>
+      <circle cx="162" cy="252" r="11"/>
+      <circle cx="174" cy="245" r="10"/>
+    </g>
+    <g id="berry-left" fill="#1A0E16">
+      <circle cx="128" cy="286" r="12"/>
+      <circle cx="141" cy="278" r="12"/>
+      <circle cx="154" cy="286" r="12"/>
+      <circle cx="154" cy="301" r="12"/>
+      <circle cx="141" cy="309" r="12"/>
+      <circle cx="128" cy="301" r="12"/>
+      <circle cx="141" cy="293" r="11"/>
+    </g>
+    <g id="berry-right" fill="#1A0E16">
+      <circle cx="186" cy="290" r="12"/>
+      <circle cx="199" cy="282" r="12"/>
+      <circle cx="212" cy="290" r="12"/>
+      <circle cx="212" cy="305" r="12"/>
+      <circle cx="199" cy="313" r="12"/>
+      <circle cx="186" cy="305" r="12"/>
+      <circle cx="199" cy="297" r="11"/>
+    </g>
+  </g>
+
+  <!-- Head, torso, and legs overlap so there is no gap between them. -->
+  <g id="person" fill="#F8E8D0">
+    <rect id="leg-left" x="276" y="286" width="18" height="64" rx="9"/>
+    <rect id="leg-right" x="306" y="286" width="18" height="64" rx="9"/>
+    <rect id="torso" x="268" y="230" width="64" height="72" rx="24"/>
+    <circle id="head" cx="300" cy="214" r="28"/>
+  </g>
+
+  <!-- Tail and feet are behind the body. Same fill, so the outline stays smooth. -->
+  <g id="mouse">
+    <path id="tail" d="M378 300c-18 8-24 32-10 46" fill="none" stroke="#B0929C" stroke-width="5" stroke-linecap="round"/>
+    <ellipse id="hind-foot" cx="392" cy="318" rx="16" ry="9" fill="#E8CEB6"/>
+    <ellipse id="front-foot" cx="448" cy="322" rx="13" ry="8" fill="#E8CEB6"/>
+    <ellipse id="body" cx="414" cy="286" rx="42" ry="32" fill="#E8CEB6"/>
+    <ellipse id="head" cx="458" cy="262" rx="26" ry="22" fill="#E8CEB6"/>
+    <path id="snout" fill="#E8CEB6" d="M472 250c16-2 32 8 30 20-4 8-20 10-32 2-4-6-4-16 2-22z"/>
+    <circle id="ear-far" cx="470" cy="236" r="9" fill="#E8CEB6"/>
+    <circle id="ear" cx="444" cy="238" r="16" fill="#E8CEB6"/>
+    <circle id="inner-ear" cx="446" cy="240" r="9" fill="#BA8C9C"/>
+    <circle id="eye" cx="470" cy="258" r="4.5" fill="#2A183A"/>
+    <circle id="eye-highlight" cx="472" cy="256.5" r="1.5" fill="#F8E8D0"/>
+    <circle id="nose" cx="498" cy="266" r="3.2" fill="#B06A62"/>
+    <g id="whiskers" fill="none" stroke="#8A7080" stroke-width="1.25" stroke-linecap="round">
+      <path d="M494 262l14-5"/>
+      <path d="M496 267l14 1"/>
+      <path d="M494 272l13 5"/>
+    </g>
+  </g>
+
+  <text id="wordmark" x="300" y="430" text-anchor="middle" fill="#F8E8D0" font-family="Arial Black, Arial, sans-serif" font-size="40">bewell-mice</text>
+</svg>
