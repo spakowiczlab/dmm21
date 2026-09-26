@@ -2,7 +2,7 @@
 <tr>
 <td>
 
-# bewell-mice
+# bewell-mice [![DOI](zenodo-doi.svg)](https://doi.org/10.5281/zenodo.22968650)
 
 Black raspberry nectar, the gut microbiome, and immune checkpoint response
 
@@ -26,6 +26,8 @@ Jahanbahkshi S*, Bibi A*, Hoyd R, Dravillas C, Williams N, Zhang S, Pallerla A, 
 \*These authors contributed equally.
 
 A preprint of an earlier version is on medRxiv: [doi:10.1101/2025.01.16.25320666](https://doi.org/10.1101/2025.01.16.25320666).
+
+The archived repository is [doi:10.5281/zenodo.22968650](https://doi.org/10.5281/zenodo.22968650).
 
 Corresponding author: [daniel.spakowicz@osumc.edu](mailto:daniel.spakowicz@osumc.edu).
 
